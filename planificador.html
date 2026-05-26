@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Planificador</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f0f2f5;
+  color: #1a1a2e;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.header {
+  background: #6c63ff;
+  color: white;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 12px rgba(108,99,255,0.35);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: 10px;
+}
+.header h1 { font-size: 1.05rem; font-weight: 700; flex-shrink: 0; }
+
+.header-right { display: flex; align-items: center; gap: 8px; }
+
+.tabs { display: flex; gap: 5px; }
+.tab {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  background: rgba(255,255,255,0.18);
+  color: white;
+  transition: all 0.18s;
+}
+.tab:hover { background: rgba(255,255,255,0.3); }
+.tab.active { background: white; color: #6c63ff; font-weight: 700; }
+
+/* Sync dot */
+.sync-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.15);
+  transition: background 0.18s;
+  flex-shrink: 0;
+}
+.sync-wrap:hover { background: rgba(255,255,255,0.25); }
+.sync-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #9ca3af;
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+.sync-label {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.85);
+  white-space: nowrap;
+}
+
+/* ── Nav bar ── */
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 11px 16px;
+  background: white;
+  border-bottom: 1px solid #e8e8e8;
+}
+.nav-btn {
+  background: none;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  padding: 5px 14px;
+  cursor: pointer;
+  color: #555;
+  font-size: 1rem;
+  transition: all 0.18s;
+}
+.nav-btn:hover { background: #6c63ff; color: white; border-color: #6c63ff; }
+.nav-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  min-width: 210px;
+  text-align: center;
+  text-transform: capitalize;
+}
+.today-btn {
+  padding: 5px 14px;
+  border: 1.5px solid #6c63ff;
+  border-radius: 8px;
+  background: none;
+  color: #6c63ff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.today-btn:hover { background: #6c63ff; color: white; }
+
+/* ── Container ── */
+.container { max-width: 980px; margin: 0 auto; padding: 20px 16px; }
+
+/* ══════════════════════
+   VISTA: MES
+══════════════════════ */
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+.dh {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #999;
+  padding: 6px 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.dc {
+  background: white;
+  border-radius: 10px;
+  padding: 8px;
+  min-height: 82px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.15s;
+}
+.dc:hover { border-color: #6c63ff; }
+.dc.m-today { background: #f5f3ff; border-color: #6c63ff; }
+.dc.m-other { opacity: 0.35; pointer-events: none; }
+.dc.m-sel { box-shadow: 0 0 0 3px rgba(108,99,255,0.25); border-color: #6c63ff; }
+.dc-num { font-size: 0.82rem; font-weight: 600; color: #444; margin-bottom: 5px; }
+.dc.m-today .dc-num { color: #6c63ff; }
+.dc-dots { display: flex; flex-wrap: wrap; gap: 3px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: #6c63ff; }
+.dot.done { background: #22c55e; }
+
+/* ══════════════════════
+   VISTA: SEMANA
+══════════════════════ */
+.week-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(110px, 1fr));
+  gap: 8px;
+  min-width: 760px;
+}
+.wc {
+  background: white;
+  border-radius: 14px;
+  padding: 12px 10px;
+  border: 2px solid transparent;
+}
+.wc.wc-today { border-color: #6c63ff; background: #fbfaff; }
+.wc-head {
+  text-align: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+}
+.wc-head:hover .wc-num { color: #6c63ff; }
+.wc-name {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.wc-num {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  line-height: 1.2;
+  transition: color 0.15s;
+}
+.wc.wc-today .wc-num { color: #6c63ff; }
+.act-list { display: flex; flex-direction: column; gap: 5px; }
+.ai {
+  display: flex; align-items: flex-start; gap: 6px;
+  padding: 5px 7px;
+  border-radius: 7px;
+  background: #f7f8fc;
+  transition: background 0.15s;
+}
+.ai:hover { background: #eeecff; }
+.ai.ai-done { opacity: 0.5; }
+.ai-check {
+  flex-shrink: 0;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 1px;
+  transition: all 0.15s;
+  font-size: 9px; color: white; font-weight: bold;
+  user-select: none;
+}
+.ai-check.ck { background: #22c55e; border-color: #22c55e; }
+.ai-body { flex: 1; min-width: 0; }
+.ai-text {
+  font-size: 0.75rem; font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: #333;
+}
+.ai.ai-done .ai-text { text-decoration: line-through; color: #bbb; }
+.ai-time { font-size: 0.64rem; color: #bbb; margin-top: 1px; }
+.ai-del {
+  flex-shrink: 0; background: none; border: none;
+  cursor: pointer; color: #ddd; font-size: 0.7rem;
+  padding: 1px 2px; opacity: 0;
+  transition: opacity 0.15s, color 0.15s; line-height: 1;
+}
+.ai:hover .ai-del { opacity: 1; }
+.ai-del:hover { color: #ef4444; }
+
+.add-area { margin-top: 8px; }
+.add-btn-sm {
+  width: 100%; padding: 5px;
+  border: 1.5px dashed #ddd; background: none;
+  border-radius: 7px; cursor: pointer;
+  color: #bbb; font-size: 0.72rem; transition: all 0.15s;
+}
+.add-btn-sm:hover { border-color: #6c63ff; color: #6c63ff; }
+.wk-form { display: flex; flex-direction: column; gap: 5px; }
+.wk-form input {
+  padding: 5px 7px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.75rem; outline: none;
+  font-family: inherit; width: 100%;
+}
+.wk-form input:focus { border-color: #6c63ff; }
+.wk-form-row { display: flex; gap: 4px; }
+.wk-form-row input { flex: 1; }
+.btn-ok {
+  padding: 5px 9px; background: #6c63ff; color: white;
+  border: none; border-radius: 6px; cursor: pointer;
+  font-size: 0.72rem; font-weight: 700;
+}
+.btn-ok:hover { background: #574fd6; }
+.btn-x {
+  padding: 5px 8px; background: none;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 6px; cursor: pointer;
+  font-size: 0.72rem; color: #999;
+}
+
+/* ══════════════════════
+   VISTA: DÍA
+══════════════════════ */
+.day-wrap {
+  max-width: 580px; margin: 0 auto;
+  background: white; border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+}
+.dv-title { font-size: 1.4rem; font-weight: 800; text-transform: capitalize; }
+.dv-sub { color: #aaa; font-size: 0.82rem; margin-top: 3px; margin-bottom: 20px; }
+.prog-label { font-size: 0.75rem; color: #888; margin-bottom: 5px; }
+.prog-bar {
+  background: #f0f2f5; border-radius: 4px;
+  height: 6px; margin-bottom: 20px; overflow: hidden;
+}
+.prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6c63ff, #22c55e);
+  border-radius: 4px; transition: width 0.4s;
+}
+.day-act {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 14px; border-radius: 10px;
+  background: #f7f8fc; margin-bottom: 8px; transition: all 0.15s;
+}
+.day-act:hover { background: #eeecff; }
+.day-act.d-done { opacity: 0.5; }
+.d-check {
+  flex-shrink: 0; width: 24px; height: 24px;
+  border-radius: 50%; border: 2.5px solid #ccc;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: bold; color: white;
+  transition: all 0.18s; user-select: none;
+}
+.d-check.ck { background: #22c55e; border-color: #22c55e; }
+.d-body { flex: 1; }
+.d-text { font-size: 0.92rem; font-weight: 500; color: #222; }
+.day-act.d-done .d-text { text-decoration: line-through; color: #bbb; }
+.d-time { font-size: 0.75rem; color: #bbb; margin-top: 2px; }
+.d-del {
+  background: none; border: none; cursor: pointer;
+  color: #ddd; font-size: 1rem; padding: 4px;
+  border-radius: 4px; opacity: 0; transition: all 0.15s;
+}
+.day-act:hover .d-del { opacity: 1; }
+.d-del:hover { color: #ef4444; }
+.empty { text-align: center; padding: 36px 0 24px; color: #ccc; }
+.empty-icon { font-size: 2.5rem; margin-bottom: 8px; }
+.empty-text { font-size: 0.9rem; }
+.dv-form {
+  margin-top: 20px; padding: 16px;
+  border: 2px dashed #e5e7eb; border-radius: 12px;
+}
+.dv-form input {
+  width: 100%; padding: 10px 12px;
+  border: 1.5px solid #e8e8e8; border-radius: 9px;
+  font-size: 0.9rem; outline: none;
+  font-family: inherit; margin-bottom: 8px;
+}
+.dv-form input:focus { border-color: #6c63ff; }
+.dv-form-row { display: flex; gap: 8px; }
+.dv-form-row input { flex: 1; margin-bottom: 0; }
+.dv-add {
+  padding: 10px 20px; background: #6c63ff; color: white;
+  border: none; border-radius: 9px; cursor: pointer;
+  font-size: 0.88rem; font-weight: 700; white-space: nowrap;
+  transition: background 0.15s;
+}
+.dv-add:hover { background: #574fd6; }
+
+/* ══════════════════════
+   MODAL ID
+══════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 16px;
+}
+.modal {
+  background: white; border-radius: 18px;
+  padding: 28px; width: 100%; max-width: 420px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+}
+.modal h2 { font-size: 1.1rem; font-weight: 800; margin-bottom: 6px; }
+.modal p { font-size: 0.85rem; color: #666; line-height: 1.5; margin-bottom: 16px; }
+
+.id-box {
+  display: flex; gap: 8px; align-items: center;
+  background: #f0f2f5; border-radius: 10px;
+  padding: 10px 14px; margin-bottom: 20px;
+}
+.id-code {
+  flex: 1; font-family: monospace; font-size: 0.78rem;
+  color: #444; word-break: break-all;
+}
+.copy-btn {
+  flex-shrink: 0; padding: 6px 12px;
+  background: #6c63ff; color: white;
+  border: none; border-radius: 8px;
+  cursor: pointer; font-size: 0.78rem; font-weight: 600;
+  transition: background 0.15s;
+}
+.copy-btn:hover { background: #574fd6; }
+.copy-btn.copied { background: #22c55e; }
+
+.modal hr { border: none; border-top: 1px solid #f0f0f0; margin: 20px 0; }
+.modal label { font-size: 0.82rem; font-weight: 600; color: #555; display: block; margin-bottom: 8px; }
+.modal-input {
+  width: 100%; padding: 10px 12px;
+  border: 1.5px solid #e5e7eb; border-radius: 9px;
+  font-size: 0.85rem; font-family: monospace;
+  outline: none; margin-bottom: 12px;
+}
+.modal-input:focus { border-color: #6c63ff; }
+
+.modal-btns { display: flex; gap: 8px; }
+.modal-ok {
+  flex: 1; padding: 10px;
+  background: #6c63ff; color: white;
+  border: none; border-radius: 9px;
+  cursor: pointer; font-size: 0.88rem; font-weight: 700;
+  transition: background 0.15s;
+}
+.modal-ok:hover { background: #574fd6; }
+.modal-cancel {
+  padding: 10px 16px; background: none;
+  border: 1.5px solid #e5e7eb; border-radius: 9px;
+  cursor: pointer; font-size: 0.88rem; color: #888;
+}
+
+/* ══════════════════════
+   BANNER LOCAL
+══════════════════════ */
+.local-banner {
+  background: #fef3c7; border-bottom: 1px solid #fcd34d;
+  padding: 8px 16px;
+  font-size: 0.8rem; color: #92400e;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.local-banner a {
+  color: #6c63ff; font-weight: 700; text-decoration: none;
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header class="header">
+    <h1>&#128197; Mi Planificador</h1>
+    <div class="header-right">
+      <div class="tabs">
+        <button class="tab" data-view="month" onclick="setView('month')">Mes</button>
+        <button class="tab" data-view="week"  onclick="setView('week')">Semana</button>
+        <button class="tab" data-view="day"   onclick="setView('day')">D&iacute;a</button>
+      </div>
+      <div class="sync-wrap" onclick="showIdModal()" title="Ver ID de sincronización">
+        <div class="sync-dot" id="sync-dot"></div>
+        <span class="sync-label" id="sync-label">local</span>
+      </div>
+    </div>
+  </header>
+
+  <div id="local-banner" class="local-banner" style="display:none">
+    &#9888; Modo local: los datos solo se guardan en este dispositivo.
+    Configura&aacute; Firebase para sincronizar.
+    <a href="#" onclick="showIdModal();return false;">C&oacute;mo configurar</a>
+  </div>
+
+  <div class="nav-bar">
+    <button class="nav-btn" onclick="nav(-1)">&#9664;</button>
+    <div class="nav-title" id="nav-title"></div>
+    <button class="nav-btn" onclick="nav(1)">&#9654;</button>
+    <button class="today-btn" onclick="goToday()">Hoy</button>
+  </div>
+
+  <div id="main"></div>
+</div>
+
+<!-- Modal de ID / configuración -->
+<div id="id-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeIdModal()">
+  <div class="modal">
+    <h2>&#128274; Sincronizaci&oacute;n entre dispositivos</h2>
+    <p>
+      Este es tu <strong>ID personal</strong>. Si lo copiás en todos tus dispositivos
+      van a compartir los mismos datos.<br><br>
+      Para que funcione, primero tenés que configurar Firebase
+      (base de datos gratuita). Si aún no lo hiciste,
+      <a href="https://console.firebase.google.com" target="_blank" style="color:#6c63ff;font-weight:700">
+        seguí las instrucciones que te pasamos.
+      </a>
+    </p>
+
+    <div class="id-box">
+      <span class="id-code" id="id-display"></span>
+      <button class="copy-btn" id="copy-btn" onclick="copyId()">Copiar</button>
+    </div>
+
+    <hr>
+    <label>Pegá un ID de otro dispositivo para usar los mismos datos:</label>
+    <input type="text" class="modal-input" id="new-id-input" placeholder="Pegá el ID aquí...">
+    <div class="modal-btns">
+      <button class="modal-ok" onclick="applyNewId()">Usar este ID</button>
+      <button class="modal-cancel" onclick="closeIdModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+  Firebase SDK — cargado desde la nube de Google
+  (requiere conexión a internet)
+════════════════════════════════════════ -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//
+//  PASO 1 — PEGÁ TU CONFIGURACIÓN DE FIREBASE AQUÍ ABAJO
+//  (reemplazá los valores vacíos con los de tu proyecto)
+//
+//  Cómo obtener la config:
+//  1. Ir a https://console.firebase.google.com
+//  2. Crear un proyecto → agregar una app web
+//  3. Copiar el objeto "firebaseConfig" y pegarlo acá
+//
+// ═══════════════════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey:            "",   // <-- pegar acá
+  authDomain:        "",
+  projectId:         "",
+  storageBucket:     "",
+  messagingSenderId: "",
+  appId:             ""
+};
+// ═══════════════════════════════════════════════════════════
+
+// ─────────────────────────────
+//  CONSTANTES DE IDIOMA
+// ─────────────────────────────
+const MESES     = ['enero','febrero','marzo','abril','mayo','junio',
+                   'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DIA_CORTO = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+const DIA_LARGO = ['lunes','martes','miércoles','jueves','viernes','sábado','domingo'];
+
+// ─────────────────────────────
+//  ESTADO
+// ─────────────────────────────
+let st = {
+  view: 'week',
+  date: new Date(),
+  data: {},
+  openForm: null
+};
+
+// ─────────────────────────────
+//  FIREBASE + USER ID
+// ─────────────────────────────
+const firebaseActivo = FIREBASE_CONFIG.apiKey !== "";
+
+let db = null;
+let userId = localStorage.getItem('plan_uid');
+if (!userId) {
+  userId = Math.random().toString(36).slice(2,10) + '-' +
+           Math.random().toString(36).slice(2,10) + '-' +
+           Math.random().toString(36).slice(2,10);
+  localStorage.setItem('plan_uid', userId);
+}
+
+if (firebaseActivo) {
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+    document.getElementById('local-banner').style.display = 'none';
+  } catch(e) {
+    console.warn('Error al iniciar Firebase:', e);
+    db = null;
+  }
+} else {
+  document.getElementById('local-banner').style.display = 'flex';
+}
+
+// ─────────────────────────────
+//  INDICADOR DE SYNC
+// ─────────────────────────────
+function setSync(estado) {
+  const dot   = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  if (!dot || !label) return;
+  const mapa = {
+    local:       { color: '#9ca3af', texto: 'local' },
+    sincronizado:{ color: '#22c55e', texto: 'sync ✓' },
+    guardando:   { color: '#f59e0b', texto: 'guardando' },
+    error:       { color: '#ef4444', texto: 'error' }
+  };
+  const s = mapa[estado] || mapa.local;
+  dot.style.background = s.color;
+  label.textContent    = s.texto;
+}
+
+// ─────────────────────────────
+//  PERSISTENCIA
+// ─────────────────────────────
+function guardarLocal() {
+  localStorage.setItem('planificador_v1', JSON.stringify(st.data));
+}
+
+function cargarLocal() {
+  try { st.data = JSON.parse(localStorage.getItem('planificador_v1')) || {}; }
+  catch { st.data = {}; }
+}
+
+function guardarFirestore() {
+  if (!db) return;
+  setSync('guardando');
+  db.collection('planificadores').doc(userId)
+    .set({ data: st.data })
+    .then(() => setSync('sincronizado'))
+    .catch(() => setSync('error'));
+}
+
+function cargarFirestore(onDone) {
+  if (!db) { onDone && onDone(); return; }
+  setSync('guardando');
+  db.collection('planificadores').doc(userId).get()
+    .then(snap => {
+      if (snap.exists) {
+        st.data = snap.data().data || {};
+        guardarLocal(); // actualizar cache local
+      }
+      setSync('sincronizado');
+      onDone && onDone();
+    })
+    .catch(() => {
+      setSync('error');
+      onDone && onDone();
+    });
+}
+
+function save() {
+  guardarLocal();
+  guardarFirestore();
+}
+
+// ─────────────────────────────
+//  HELPERS DE FECHA
+// ─────────────────────────────
+function dk(d) {
+  const y   = d.getFullYear();
+  const m   = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function fromKey(k)   { return new Date(k + 'T12:00:00'); }
+function addDays(d, n){ const c = new Date(d); c.setDate(c.getDate() + n); return c; }
+
+function monOfWeek(d) {
+  const c = new Date(d);
+  c.setHours(12,0,0,0);
+  const dow  = c.getDay();
+  const diff = (dow === 0) ? -6 : 1 - dow;
+  c.setDate(c.getDate() + diff);
+  return c;
+}
+
+function isToday(d) { return dk(d) === dk(new Date()); }
+function diIdx(d)   { return (d.getDay() + 6) % 7; }
+
+// ─────────────────────────────
+//  CRUD ACTIVIDADES
+// ─────────────────────────────
+function acts(d)    { return st.data[dk(d)] || []; }
+
+function setActs(d, arr) {
+  if (arr.length === 0) delete st.data[dk(d)];
+  else st.data[dk(d)] = arr;
+  save();
+}
+
+function addAct(d, text, time) {
+  const arr = acts(d);
+  arr.push({ id: uid(), text, time, done: false });
+  setActs(d, arr);
+}
+
+function toggleAct(d, id) {
+  setActs(d, acts(d).map(a => a.id === id ? { ...a, done: !a.done } : a));
+}
+
+function delAct(d, id) {
+  setActs(d, acts(d).filter(a => a.id !== id));
+}
+
+function uid() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+// ─────────────────────────────
+//  NAVEGACIÓN
+// ─────────────────────────────
+function nav(dir) {
+  st.openForm = null;
+  if (st.view === 'month') {
+    st.date = new Date(st.date.getFullYear(), st.date.getMonth() + dir, 1);
+  } else if (st.view === 'week') {
+    st.date = addDays(st.date, dir * 7);
+  } else {
+    st.date = addDays(st.date, dir);
+  }
+  render();
+}
+
+function goToday() { st.openForm = null; st.date = new Date(); render(); }
+function setView(v) { st.openForm = null; st.view = v; render(); }
+
+// ─────────────────────────────
+//  RENDER PRINCIPAL
+// ─────────────────────────────
+function render() {
+  document.querySelectorAll('.tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.view === st.view)
+  );
+
+  let title = '', html = '';
+
+  if (st.view === 'month') {
+    title = `${MESES[st.date.getMonth()]} ${st.date.getFullYear()}`;
+    html  = renderMonth();
+  } else if (st.view === 'week') {
+    const mon = monOfWeek(st.date);
+    const sun = addDays(mon, 6);
+    if (mon.getMonth() === sun.getMonth()) {
+      title = `${MESES[mon.getMonth()]} ${mon.getFullYear()}`;
+    } else {
+      const m1 = MESES[mon.getMonth()].slice(0,3);
+      const m2 = MESES[sun.getMonth()].slice(0,3);
+      title = `${mon.getDate()} ${m1} – ${sun.getDate()} ${m2} ${sun.getFullYear()}`;
+    }
+    html = renderWeek();
+  } else {
+    title = `${DIA_LARGO[diIdx(st.date)]}, ${st.date.getDate()} de ${MESES[st.date.getMonth()]}`;
+    html  = renderDay();
+  }
+
+  document.getElementById('nav-title').textContent = title;
+  document.getElementById('main').innerHTML = html;
+
+  if (st.openForm) {
+    const inp = document.getElementById('wk-txt-' + st.openForm);
+    if (inp) inp.focus();
+  }
+}
+
+// ─────────────────────────────
+//  VISTA MES
+// ─────────────────────────────
+function renderMonth() {
+  const year  = st.date.getFullYear();
+  const month = st.date.getMonth();
+  const first = new Date(year, month, 1);
+  const startOffset = (first.getDay() + 6) % 7;
+  const cur = addDays(first, -startOffset);
+
+  let html = '<div class="container"><div class="month-grid">';
+  DIA_CORTO.forEach(d => { html += `<div class="dh">${d}</div>`; });
+
+  for (let i = 0; i < 42; i++) {
+    const key   = dk(cur);
+    const aa    = acts(cur);
+    const other = cur.getMonth() !== month;
+    const tod   = isToday(cur);
+    const sel   = dk(cur) === dk(st.date);
+
+    let cls = 'dc';
+    if (other) cls += ' m-other';
+    if (tod)   cls += ' m-today';
+    if (sel && !other) cls += ' m-sel';
+
+    const dots  = aa.map(a => `<div class="dot${a.done?' done':''}"></div>`).join('');
+    const click = other ? '' : `onclick="clickDay('${key}')"`;
+
+    html += `<div class="${cls}" ${click}>
+      <div class="dc-num">${cur.getDate()}</div>
+      <div class="dc-dots">${dots}</div>
+    </div>`;
+
+    cur.setDate(cur.getDate() + 1);
+  }
+
+  return html + '</div></div>';
+}
+
+// ─────────────────────────────
+//  VISTA SEMANA
+// ─────────────────────────────
+function renderWeek() {
+  const mon = monOfWeek(st.date);
+  let html = '<div class="container"><div class="week-scroll"><div class="week-grid">';
+
+  for (let i = 0; i < 7; i++) {
+    const day      = addDays(mon, i);
+    const key      = dk(day);
+    const aa       = acts(day);
+    const tod      = isToday(day);
+    const formOpen = st.openForm === key;
+
+    const actsHtml = aa.map(a => `
+      <div class="ai${a.done?' ai-done':''}">
+        <div class="ai-check${a.done?' ck':''}" onclick="toggle('${key}','${a.id}')">${a.done?'✓':''}</div>
+        <div class="ai-body">
+          <div class="ai-text">${esc(a.text)}</div>
+          ${a.time?`<div class="ai-time">${a.time}</div>`:''}
+        </div>
+        <button class="ai-del" onclick="del('${key}','${a.id}')">✕</button>
+      </div>`).join('');
+
+    const formHtml = formOpen
+      ? `<div class="wk-form">
+          <input type="text" id="wk-txt-${key}" placeholder="Actividad..."
+            onkeydown="wkKey(event,'${key}')">
+          <div class="wk-form-row">
+            <input type="time" id="wk-time-${key}">
+            <button class="btn-ok" onclick="wkSave('${key}')">OK</button>
+            <button class="btn-x" onclick="closeForm()">✕</button>
+          </div>
+        </div>`
+      : `<button class="add-btn-sm" onclick="openForm('${key}')">+ agregar</button>`;
+
+    html += `<div class="wc${tod?' wc-today':''}">
+      <div class="wc-head" onclick="clickDay('${key}')">
+        <div class="wc-name">${DIA_CORTO[i]}</div>
+        <div class="wc-num">${day.getDate()}</div>
+      </div>
+      <div class="act-list">${actsHtml}</div>
+      <div class="add-area">${formHtml}</div>
+    </div>`;
+  }
+
+  return html + '</div></div></div>';
+}
+
+// ─────────────────────────────
+//  VISTA DÍA
+// ─────────────────────────────
+function renderDay() {
+  const key   = dk(st.date);
+  const aa    = acts(st.date);
+  const tod   = isToday(st.date);
+  const total = aa.length;
+  const done  = aa.filter(a => a.done).length;
+  const pct   = total > 0 ? Math.round(done / total * 100) : 0;
+
+  let bodyHtml = '';
+
+  if (total === 0) {
+    bodyHtml = `<div class="empty">
+      <div class="empty-icon">&#128203;</div>
+      <div class="empty-text">No hay actividades &mdash; &iexcl;agrega una!</div>
+    </div>`;
+  } else {
+    bodyHtml += `<div class="prog-label">${done} de ${total} completadas (${pct}%)</div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>`;
+
+    aa.forEach(a => {
+      bodyHtml += `<div class="day-act${a.done?' d-done':''}">
+        <div class="d-check${a.done?' ck':''}" onclick="toggle('${key}','${a.id}')">${a.done?'✓':''}</div>
+        <div class="d-body">
+          <div class="d-text">${esc(a.text)}</div>
+          ${a.time?`<div class="d-time">${a.time}</div>`:''}
+        </div>
+        <button class="d-del" onclick="del('${key}','${a.id}')">&#128465;</button>
+      </div>`;
+    });
+  }
+
+  return `<div class="container"><div class="day-wrap">
+    <div class="dv-title">${DIA_LARGO[diIdx(st.date)]}, ${st.date.getDate()} de ${MESES[st.date.getMonth()]}</div>
+    <div class="dv-sub">${tod ? '— hoy' : st.date.getFullYear()}</div>
+    ${bodyHtml}
+    <div class="dv-form">
+      <input type="text" id="dv-txt" placeholder="Nueva actividad..."
+        onkeydown="if(event.key==='Enter')dvSave()">
+      <div class="dv-form-row">
+        <input type="time" id="dv-time">
+        <button class="dv-add" onclick="dvSave()">+ Agregar</button>
+      </div>
+    </div>
+  </div></div>`;
+}
+
+// ─────────────────────────────
+//  ACCIONES
+// ─────────────────────────────
+function clickDay(key)  { st.date = fromKey(key); st.view = 'day'; render(); }
+function toggle(key,id) { toggleAct(fromKey(key), id); render(); }
+function del(key, id)   { delAct(fromKey(key), id); render(); }
+function openForm(key)  { st.openForm = key; render(); }
+function closeForm()    { st.openForm = null; render(); }
+
+function wkKey(e, key) {
+  if (e.key === 'Enter')  wkSave(key);
+  if (e.key === 'Escape') closeForm();
+}
+
+function wkSave(key) {
+  const txt  = document.getElementById('wk-txt-' + key)?.value?.trim();
+  const time = document.getElementById('wk-time-' + key)?.value || '';
+  if (!txt) return;
+  addAct(fromKey(key), txt, time);
+  st.openForm = null;
+  render();
+}
+
+function dvSave() {
+  const txt  = document.getElementById('dv-txt')?.value?.trim();
+  const time = document.getElementById('dv-time')?.value || '';
+  if (!txt) return;
+  addAct(st.date, txt, time);
+  render();
+  document.getElementById('dv-txt')?.focus();
+}
+
+function esc(str) {
+  return str
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─────────────────────────────
+//  MODAL ID
+// ─────────────────────────────
+function showIdModal() {
+  document.getElementById('id-display').textContent = userId;
+  document.getElementById('new-id-input').value = '';
+  document.getElementById('id-modal').style.display = 'flex';
+}
+
+function closeIdModal() {
+  document.getElementById('id-modal').style.display = 'none';
+}
+
+function copyId() {
+  navigator.clipboard.writeText(userId).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '¡Copiado!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copiar';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+function applyNewId() {
+  const nuevoId = document.getElementById('new-id-input').value.trim();
+  if (!nuevoId) return;
+  userId = nuevoId;
+  localStorage.setItem('plan_uid', userId);
+  closeIdModal();
+  st.data = {};
+  cargarFirestore(() => render());
+}
+
+// ─────────────────────────────
+//  INICIO
+// ─────────────────────────────
+cargarLocal();   // carga inmediata desde caché local
+render();
+
+// luego sincroniza con Firestore si está configurado
+if (firebaseActivo) {
+  cargarFirestore(() => render());
+} else {
+  setSync('local');
+}
+</script>
+</body>
+</html>
