@@ -575,10 +575,10 @@ function delObj(d,objId) { setObjs(d,getObjs(d).filter(o=>o.id!==objId)); }
 function delStage(d,objId,stageId) {
   setObjs(d,getObjs(d).map(o=>o.id===objId?{...o,stages:(o.stages||[]).filter(s=>s.id!==stageId)}:o));
 }
-function assignDayToStage(d,objId,stageId,dayKey) {
+function assignDayToStage(d,objId,stageId,dayKey,timeStart) {
   setObjs(d,getObjs(d).map(o=>
     o.id===objId?{...o,stages:(o.stages||[]).map(s=>
-      s.id===stageId?{...s,dayKey:dayKey||''}:s
+      s.id===stageId?{...s,dayKey:dayKey||'',timeStart:timeStart||''}:s
     )}:o
   ));
 }
@@ -700,7 +700,7 @@ function renderWeek() {
       <div class="wsp-title">&#127919; Prioridades &middot; Semana ${weekNum}</div>
       ${weekStages.map(s=>{
         const dayTag=s.dayKey
-          ?`<span class="wsp-day-tag" onclick="assignStageDay('${ym}','${s.objId}','${s.id}')">&#128197; ${dayLabelShort(s.dayKey)}</span>`
+          ?`<span class="wsp-day-tag" onclick="assignStageDay('${ym}','${s.objId}','${s.id}')">&#128197; ${dayLabelShort(s.dayKey)}${s.timeStart?' · '+s.timeStart:''}</span>`
           :`<button class="wsp-assign-btn" onclick="assignStageDay('${ym}','${s.objId}','${s.id}')">+ Asignar d&iacute;a</button>`;
         return `<div class="wsp-item ${s.done?'wsp-done':''}">
           <div class="wsp-dot"></div>
@@ -757,6 +757,7 @@ function renderDay() {
       <div class="dst-label">&#127919; PRIORIDAD DEL MES</div>
       <div class="dst-obj">&#128204; ${esc(s.objText)}</div>
       <div class="dst-text">${esc(s.text)}</div>
+      ${s.timeStart?`<div style="font-size:.72rem;color:#d97706;margin-top:5px;font-weight:600">&#9201; ${s.timeStart}</div>`:''}
     </div>`).join('')}</div>`:'';
   let html=`<div class="container"><div class="day-wrap">
     <div class="day-header-card">
@@ -1036,6 +1037,10 @@ function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 function assignStageDay(ym, objId, stageId) {
   document.getElementById('assign-popup-overlay')?.remove();
   const mon=monOfWeek(st.date);
+  // Buscar tiempo ya guardado
+  const existingObjs=getObjs(fromKey(ym+'-01'));
+  let existingTime='';
+  existingObjs.forEach(o=>{ if(o.id===objId)(o.stages||[]).forEach(s=>{ if(s.id===stageId) existingTime=s.timeStart||''; }); });
   const overlay=document.createElement('div');
   overlay.id='assign-popup-overlay';
   overlay.className='assign-popup-overlay';
@@ -1046,17 +1051,20 @@ function assignStageDay(ym, objId, stageId) {
   }).join('');
   overlay.innerHTML=`<div class="assign-popup">
     <h3>&#128197; ¿Cuándo trabajás esta etapa?</h3>
-    <div class="assign-day-grid">
-      ${days}
-      <button class="assign-clear-btn" onclick="doAssignDay('${ym}','${objId}','${stageId}','')">Quitar d&iacute;a asignado</button>
+    <div class="assign-day-grid">${days}</div>
+    <div style="margin-top:12px">
+      <label style="font-size:.72rem;font-weight:600;color:#666;display:block;margin-bottom:5px">&#9201; Horario (opcional)</label>
+      <input type="time" id="assign-time-input" value="${existingTime}" style="width:100%;padding:8px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:.88rem;outline:none;font-family:inherit">
     </div>
+    <button class="assign-clear-btn" style="width:100%;margin-top:8px" onclick="doAssignDay('${ym}','${objId}','${stageId}','')">Quitar d&iacute;a y horario</button>
     <button class="assign-cancel-btn" onclick="document.getElementById('assign-popup-overlay')?.remove()">Cancelar</button>
   </div>`;
   document.body.appendChild(overlay);
 }
 function doAssignDay(ym, objId, stageId, dayKey) {
+  const timeStart=dayKey?(document.getElementById('assign-time-input')?.value||''):'';
   document.getElementById('assign-popup-overlay')?.remove();
-  assignDayToStage(fromKey(ym+'-01'),objId,stageId,dayKey);
+  assignDayToStage(fromKey(ym+'-01'),objId,stageId,dayKey,timeStart);
   render();
 }
 
