@@ -232,6 +232,40 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .empty-text{font-size:.88rem}
 .local-banner{background:#fef3c7;border-bottom:1px solid #fcd34d;padding:7px 16px;font-size:.76rem;color:#92400e;display:flex;align-items:center;justify-content:center;gap:8px}
 .local-banner a{color:#6c63ff;font-weight:700;text-decoration:none}
+
+/* WEEK STAGES PANEL */
+.week-stages-panel{background:#fffbeb;border:1.5px solid #fcd34d;border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.wsp-title{font-size:.72rem;font-weight:800;color:#d97706;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.wsp-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:white;margin-bottom:6px;border-left:3px solid #f59e0b;transition:opacity .2s}
+.wsp-item:last-child{margin-bottom:0}
+.wsp-item.wsp-done{opacity:.5}
+.wsp-dot{width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0}
+.wsp-body{flex:1;min-width:0}
+.wsp-text{font-size:.82rem;font-weight:600;color:#78350f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wsp-item.wsp-done .wsp-text{text-decoration:line-through;color:#bbb}
+.wsp-obj{font-size:.65rem;color:#b45309;font-style:italic;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wsp-assign-btn{padding:4px 10px;background:none;border:1.5px solid #f59e0b;border-radius:14px;cursor:pointer;color:#d97706;font-size:.67rem;font-weight:600;white-space:nowrap;transition:all .15s;flex-shrink:0}
+.wsp-assign-btn:hover{background:#f59e0b;color:white}
+.wsp-day-tag{padding:4px 10px;background:#fef3c7;border-radius:14px;font-size:.67rem;font-weight:600;color:#d97706;cursor:pointer;white-space:nowrap;flex-shrink:0;border:1.5px solid #fcd34d;transition:all .15s}
+.wsp-day-tag:hover{background:#f59e0b;color:white}
+
+/* DAY STAGE CARDS */
+.day-stage-card{background:#fffbeb;border:2px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:12px;padding:14px 16px;margin-bottom:8px}
+.day-stage-card.dst-done{opacity:.55}
+.dst-label{font-size:.62rem;font-weight:800;color:#f59e0b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.dst-obj{font-size:.72rem;color:#b45309;font-style:italic;margin-bottom:4px}
+.dst-text{font-size:.9rem;font-weight:600;color:#78350f}
+
+/* ASSIGN DAY POPUP */
+.assign-popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px}
+.assign-popup{background:white;border-radius:16px;padding:20px;width:100%;max-width:290px;box-shadow:0 8px 40px rgba(0,0,0,.2)}
+.assign-popup h3{font-size:.9rem;font-weight:700;margin-bottom:14px;color:#1a1a2e}
+.assign-day-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.assign-day-btn{padding:9px 6px;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;font-size:.78rem;background:none;color:#444;transition:all .15s;font-weight:500;text-align:center}
+.assign-day-btn:hover{background:#f59e0b;border-color:#f59e0b;color:white}
+.assign-clear-btn{grid-column:1/-1;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;font-size:.75rem;background:none;color:#9ca3af;transition:all .15s;margin-top:2px}
+.assign-clear-btn:hover{border-color:#ef4444;color:#ef4444}
+.assign-cancel-btn{width:100%;margin-top:8px;padding:8px;border:none;border-radius:8px;cursor:pointer;font-size:.82rem;background:#f0f2f5;color:#888}
 </style>
 </head>
 <body>
@@ -474,6 +508,16 @@ function addDays(d,n) { const c=new Date(d); c.setDate(c.getDate()+n); return c;
 function monOfWeek(d) { const c=new Date(d); c.setHours(12,0,0,0); const diff=(c.getDay()===0)?-6:1-c.getDay(); c.setDate(c.getDate()+diff); return c; }
 function isToday(d) { return dk(d)===dk(new Date()); }
 function diIdx(d) { return (d.getDay()+6)%7; }
+function weekNumOfMonth(d) {
+  const mon=monOfWeek(d);
+  const dayInMonth=mon.getMonth()===d.getMonth()?mon.getDate():1;
+  return Math.min(4,Math.ceil(dayInMonth/7));
+}
+function dayLabelShort(key) {
+  if(!key) return '';
+  const d=fromKey(key);
+  return `${DIA_CORTO[diIdx(d)]} ${d.getDate()}`;
+}
 
 // ═══════════════════════════════════════════
 //  ACTIVITY CRUD
@@ -530,6 +574,13 @@ function toggleStage(d,objId,stageId) {
 function delObj(d,objId) { setObjs(d,getObjs(d).filter(o=>o.id!==objId)); }
 function delStage(d,objId,stageId) {
   setObjs(d,getObjs(d).map(o=>o.id===objId?{...o,stages:(o.stages||[]).filter(s=>s.id!==stageId)}:o));
+}
+function assignDayToStage(d,objId,stageId,dayKey) {
+  setObjs(d,getObjs(d).map(o=>
+    o.id===objId?{...o,stages:(o.stages||[]).map(s=>
+      s.id===stageId?{...s,dayKey:dayKey||''}:s
+    )}:o
+  ));
 }
 
 // ═══════════════════════════════════════════
@@ -636,7 +687,33 @@ function renderMonth() {
 // ═══════════════════════════════════════════
 function renderWeek() {
   const mon=monOfWeek(st.date);
-  let html='<div class="container"><div class="week-scroll"><div class="week-grid">';
+  const weekNum=weekNumOfMonth(st.date);
+  const objs=getObjs(mon);
+  const ym=ymk(mon);
+  const weekStages=[];
+  objs.forEach(obj=>{
+    (obj.stages||[]).forEach(s=>{ if(String(s.week)===String(weekNum)) weekStages.push({...s,objText:obj.text,objId:obj.id}); });
+  });
+  let stagesHtml='';
+  if(weekStages.length>0){
+    stagesHtml=`<div class="week-stages-panel">
+      <div class="wsp-title">&#127919; Prioridades &middot; Semana ${weekNum}</div>
+      ${weekStages.map(s=>{
+        const dayTag=s.dayKey
+          ?`<span class="wsp-day-tag" onclick="assignStageDay('${ym}','${s.objId}','${s.id}')">&#128197; ${dayLabelShort(s.dayKey)}</span>`
+          :`<button class="wsp-assign-btn" onclick="assignStageDay('${ym}','${s.objId}','${s.id}')">+ Asignar d&iacute;a</button>`;
+        return `<div class="wsp-item ${s.done?'wsp-done':''}">
+          <div class="wsp-dot"></div>
+          <div class="wsp-body">
+            <div class="wsp-text">${esc(s.text)}</div>
+            <div class="wsp-obj">&#128204; ${esc(s.objText)}</div>
+          </div>
+          ${dayTag}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+  let html=`<div class="container">${stagesHtml}<div class="week-scroll"><div class="week-grid">`;
   for (let i=0;i<7;i++) {
     const day=addDays(mon,i), key=dk(day), aa=sortedActs(day), tod=isToday(day);
     const actsHtml=aa.map(a=>{
@@ -671,12 +748,23 @@ function renderDay() {
   const key=dk(st.date), aa=sortedActs(st.date);
   const total=aa.length, done=aa.filter(a=>a.done).length, pct=total>0?Math.round(done/total*100):0;
   const tod=isToday(st.date);
+  // Etapas asignadas a este día
+  const objs=getObjs(st.date), ym=ymk(st.date);
+  const dayStages=[];
+  objs.forEach(obj=>{ (obj.stages||[]).forEach(s=>{ if(s.dayKey===key) dayStages.push({...s,objText:obj.text,objId:obj.id}); }); });
+  const stageCards=dayStages.length>0?`<div style="margin-bottom:4px">${dayStages.map(s=>`
+    <div class="day-stage-card ${s.done?'dst-done':''}">
+      <div class="dst-label">&#127919; PRIORIDAD DEL MES</div>
+      <div class="dst-obj">&#128204; ${esc(s.objText)}</div>
+      <div class="dst-text">${esc(s.text)}</div>
+    </div>`).join('')}</div>`:'';
   let html=`<div class="container"><div class="day-wrap">
     <div class="day-header-card">
       <div class="dv-title">${DIA_LARGO[diIdx(st.date)]}, ${st.date.getDate()} de ${MESES[st.date.getMonth()]}</div>
       <div class="dv-sub">${tod?'— hoy':st.date.getFullYear()}</div>
       ${total>0?`<div class="prog-label">${done} de ${total} completadas (${pct}%)</div><div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>`:''}
-    </div>`;
+    </div>
+    ${stageCards}`;
   if (total===0) {
     html+=`<div class="empty"><div class="empty-icon">&#128203;</div><div class="empty-text">No hay actividades — ¡agregá una!</div></div>`;
   } else {
@@ -941,6 +1029,36 @@ function toggleSub(key,actId,subId) { toggleSubAct(fromKey(key),actId,subId); re
 function del(key,id) { delAct(fromKey(key),id); render(); }
 function uid() { return Math.random().toString(36).slice(2)+Date.now().toString(36); }
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ═══════════════════════════════════════════
+//  ASIGNAR DÍA A ETAPA
+// ═══════════════════════════════════════════
+function assignStageDay(ym, objId, stageId) {
+  document.getElementById('assign-popup-overlay')?.remove();
+  const mon=monOfWeek(st.date);
+  const overlay=document.createElement('div');
+  overlay.id='assign-popup-overlay';
+  overlay.className='assign-popup-overlay';
+  overlay.onclick=e=>{ if(e.target===overlay) overlay.remove(); };
+  const days=Array.from({length:7},(_,i)=>{
+    const d=addDays(mon,i);
+    return `<button class="assign-day-btn" onclick="doAssignDay('${ym}','${objId}','${stageId}','${dk(d)}')">${DIA_CORTO[i]}<br><span style="font-size:.85em;opacity:.7">${d.getDate()}</span></button>`;
+  }).join('');
+  overlay.innerHTML=`<div class="assign-popup">
+    <h3>&#128197; ¿Cuándo trabajás esta etapa?</h3>
+    <div class="assign-day-grid">
+      ${days}
+      <button class="assign-clear-btn" onclick="doAssignDay('${ym}','${objId}','${stageId}','')">Quitar d&iacute;a asignado</button>
+    </div>
+    <button class="assign-cancel-btn" onclick="document.getElementById('assign-popup-overlay')?.remove()">Cancelar</button>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+function doAssignDay(ym, objId, stageId, dayKey) {
+  document.getElementById('assign-popup-overlay')?.remove();
+  assignDayToStage(fromKey(ym+'-01'),objId,stageId,dayKey);
+  render();
+}
 
 // ═══════════════════════════════════════════
 //  INICIO
