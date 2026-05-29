@@ -266,6 +266,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .assign-clear-btn{grid-column:1/-1;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;font-size:.75rem;background:none;color:#9ca3af;transition:all .15s;margin-top:2px}
 .assign-clear-btn:hover{border-color:#ef4444;color:#ef4444}
 .assign-cancel-btn{width:100%;margin-top:8px;padding:8px;border:none;border-radius:8px;cursor:pointer;font-size:.82rem;background:#f0f2f5;color:#888}
+
+/* INCUMPLIMIENTO */
+.ai.ai-skip{opacity:.55}
+.ai-skip-x{flex-shrink:0;width:16px;height:16px;border-radius:50%;background:#ef4444;border:2px solid #ef4444;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:2px;font-size:9px;color:white;font-weight:bold;user-select:none;transition:all .15s}
+.day-act-card.d-skip{border-left:3px solid #ef4444;opacity:.8}
+.d-skip-x{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:#ef4444;border:2.5px solid #ef4444;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;color:white;transition:all .18s;user-select:none}
+.dac-btn.skip-btn{color:#ef4444;border-color:#fca5a5}
+.dac-btn.skip-btn:hover{background:#ef4444;color:white;border-color:#ef4444}
+.dac-btn.unskip-btn{background:#fef2f2;color:#ef4444;border-color:#fca5a5}
+.dac-btn.unskip-btn:hover{background:#fee2e2;border-color:#ef4444}
+.skip-reason-card{margin-top:8px;padding:7px 10px;background:#fef2f2;border-radius:8px;font-size:.76rem;color:#b91c1c;font-style:italic;border-left:3px solid #ef4444}
+.skip-popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px}
+.skip-popup{background:white;border-radius:16px;padding:20px;width:100%;max-width:320px;box-shadow:0 8px 40px rgba(0,0,0,.2)}
+.skip-popup h3{font-size:.9rem;font-weight:700;margin-bottom:12px;color:#1a1a2e}
+.skip-reason-inp{width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:9px;font-size:.87rem;font-family:inherit;resize:vertical;min-height:70px;outline:none}
+.skip-reason-inp:focus{border-color:#ef4444}
+.skip-confirm-btn{width:100%;margin-top:10px;padding:10px;background:#ef4444;color:white;border:none;border-radius:9px;cursor:pointer;font-size:.88rem;font-weight:700}
+.skip-confirm-btn:hover{background:#dc2626}
+.skip-cancel-btn{width:100%;margin-top:6px;padding:8px;border:none;border-radius:8px;cursor:pointer;font-size:.82rem;background:#f0f2f5;color:#888}
+.stat-box.pending-box{background:#f3f4f6}
+.stat-box.pending-box .stat-num{color:#6b7280}
 </style>
 </head>
 <body>
@@ -533,7 +554,9 @@ function sortedActs(d) {
 }
 function setActs(d,arr) { if(arr.length===0) delete st.data[dk(d)]; else st.data[dk(d)]=arr; save(); }
 function addAct(d,act) { const arr=acts(d); arr.push({id:uid(),done:false,subacts:[],...act}); setActs(d,arr); }
-function toggleAct(d,id) { setActs(d,acts(d).map(a=>a.id===id?{...a,done:!a.done}:a)); }
+function toggleAct(d,id) { setActs(d,acts(d).map(a=>a.id===id?{...a,done:!a.done,skipped:false,skipReason:''}:a)); }
+function markSkipped(d,id,reason) { setActs(d,acts(d).map(a=>a.id===id?{...a,done:false,skipped:true,skipReason:reason}:a)); }
+function markPending(d,id) { setActs(d,acts(d).map(a=>a.id===id?{...a,done:false,skipped:false,skipReason:''}:a)); }
 function toggleSubAct(d,actId,subId) {
   setActs(d,acts(d).map(a=>a.id===actId?{...a,subacts:(a.subacts||[]).map(s=>s.id===subId?{...s,done:!s.done}:s)}:a));
 }
@@ -606,9 +629,9 @@ function evalStats() {
     const days=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
     for(let i=1;i<=days;i++) keys.push(dk(new Date(d.getFullYear(),d.getMonth(),i)));
   }
-  let total=0,done=0;
-  keys.forEach(k=>{ const aa=st.data[k]||[]; total+=aa.length; done+=aa.filter(a=>a.done).length; });
-  return {total,done,missed:total-done,pct:total>0?Math.round(done/total*100):0};
+  let total=0,done=0,missed=0;
+  keys.forEach(k=>{ const aa=st.data[k]||[]; total+=aa.length; done+=aa.filter(a=>a.done).length; missed+=aa.filter(a=>a.skipped).length; });
+  return {total,done,missed,pending:total-done-missed,pct:total>0?Math.round(done/total*100):0};
 }
 
 // ═══════════════════════════════════════════
@@ -719,14 +742,18 @@ function renderWeek() {
     const actsHtml=aa.map(a=>{
       const cat=a.category||'normal', emoji=CATS[cat]?.emoji||'';
       const subs=(a.subacts||[]).length;
-      return `<div class="ai ${a.done?'ai-done':''}" onclick="clickDay('${key}')">
-        <div class="ai-check ${a.done?'ck':''}" onclick="event.stopPropagation();toggle('${key}','${a.id}')">${a.done?'✓':''}</div>
+      const wkCls=a.done?'ai-done':a.skipped?'ai-skip':'';
+      const wkCheck=a.skipped
+        ?`<div class="ai-skip-x" onclick="event.stopPropagation();toggle('${key}','${a.id}')" title="Quitar incumplimiento">&#10007;</div>`
+        :`<div class="ai-check ${a.done?'ck':''}" onclick="event.stopPropagation();toggle('${key}','${a.id}')">${a.done?'&#10003;':''}</div>`;
+      return `<div class="ai ${wkCls}" onclick="clickDay('${key}')">
+        ${wkCheck}
         <div class="ai-body">
           <div class="ai-text">${emoji?`${emoji} `:''}${esc(a.text)}</div>
           ${a.timeStart?`<div class="ai-time">${a.timeStart}${a.timeEnd?' – '+a.timeEnd:''}</div>`:''}
           ${subs>0?`<div class="ai-sub-count">${subs} subtarea${subs>1?'s':''}</div>`:''}
         </div>
-        <button class="ai-del" onclick="event.stopPropagation();del('${key}','${a.id}')">✕</button>
+        <button class="ai-del" onclick="event.stopPropagation();del('${key}','${a.id}')">&#10005;</button>
       </div>`;
     }).join('');
     html+=`<div class="wc ${tod?'wc-today':''}">
@@ -746,10 +773,15 @@ function renderWeek() {
 // ═══════════════════════════════════════════
 function renderDay() {
   const key=dk(st.date), aa=sortedActs(st.date);
-  const total=aa.length, done=aa.filter(a=>a.done).length, pct=total>0?Math.round(done/total*100):0;
+  const total=aa.length;
+  const doneCount=aa.filter(a=>a.done).length;
+  const skipCount=aa.filter(a=>a.skipped).length;
+  const pendingCount=total-doneCount-skipCount;
+  const pct=total>0?Math.round(doneCount/total*100):0;
+  const skipPct=total>0?Math.round(skipCount/total*100):0;
   const tod=isToday(st.date);
   // Etapas asignadas a este día
-  const objs=getObjs(st.date), ym=ymk(st.date);
+  const objs=getObjs(st.date);
   const dayStages=[];
   objs.forEach(obj=>{ (obj.stages||[]).forEach(s=>{ if(s.dayKey===key) dayStages.push({...s,objText:obj.text,objId:obj.id}); }); });
   const stageCards=dayStages.length>0?`<div style="margin-bottom:4px">${dayStages.map(s=>`
@@ -759,11 +791,22 @@ function renderDay() {
       <div class="dst-text">${esc(s.text)}</div>
       ${s.timeStart?`<div style="font-size:.72rem;color:#d97706;margin-top:5px;font-weight:600">&#9201; ${s.timeStart}</div>`:''}
     </div>`).join('')}</div>`:'';
+  let statsLine='';
+  if(total>0){
+    const parts=[`${doneCount} cumplidas`];
+    if(skipCount>0) parts.push(`${skipCount} no cumplidas`);
+    if(pendingCount>0) parts.push(`${pendingCount} pendientes`);
+    statsLine=`<div class="prog-label">${parts.join(' &middot; ')} (${pct}% logrado)</div>
+      <div class="prog-bar" style="display:flex">
+        <div class="prog-fill" style="width:${pct}%"></div>
+        <div style="width:${skipPct}%;height:100%;background:#ef4444;transition:width .4s"></div>
+      </div>`;
+  }
   let html=`<div class="container"><div class="day-wrap">
     <div class="day-header-card">
       <div class="dv-title">${DIA_LARGO[diIdx(st.date)]}, ${st.date.getDate()} de ${MESES[st.date.getMonth()]}</div>
       <div class="dv-sub">${tod?'— hoy':st.date.getFullYear()}</div>
-      ${total>0?`<div class="prog-label">${done} de ${total} completadas (${pct}%)</div><div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>`:''}
+      ${statsLine}
     </div>
     ${stageCards}`;
   if (total===0) {
@@ -777,19 +820,32 @@ function renderDay() {
           <div class="subact-check ${s.done?'ck':''}" onclick="toggleSub('${key}','${a.id}','${s.id}')">${s.done?'✓':''}</div>
           <span class="subact-text ${s.done?'done':''}">${esc(s.text)}</span>
         </div>`).join('')}</div>`:'';
-      html+=`<div class="day-act-card ${a.done?'d-done':''}">
+      const cardCls=a.done?'d-done':a.skipped?'d-skip':'';
+      const checkEl=a.skipped
+        ?`<div class="d-skip-x" onclick="unSkipAct('${key}','${a.id}')" title="Quitar incumplimiento">&#10007;</div>`
+        :`<div class="d-check ${a.done?'ck':''}" onclick="toggle('${key}','${a.id}')">${a.done?'&#10003;':''}</div>`;
+      const skipBtn=a.skipped
+        ?`<button class="dac-btn unskip-btn" onclick="unSkipAct('${key}','${a.id}')" title="Quitar incumplimiento">&#8629;</button>`
+        :a.done?''
+        :`<button class="dac-btn skip-btn" onclick="openSkipModal('${key}','${a.id}')" title="No la cumplí">&#10007;</button>`;
+      const skipReasonEl=a.skipped
+        ?(a.skipReason?`<div class="skip-reason-card">&#10060; ${esc(a.skipReason)}</div>`
+        :`<div class="skip-reason-card" style="color:#9ca3af;font-style:normal">No cumplida &mdash; sin motivo registrado</div>`):'';
+      html+=`<div class="day-act-card ${cardCls}">
         <div class="dac-top">
-          <div class="d-check ${a.done?'ck':''}" onclick="toggle('${key}','${a.id}')">${a.done?'✓':''}</div>
+          ${checkEl}
           <div class="dac-body">
             <span class="d-text">${emoji?emoji+' ':''}${esc(a.text)}</span>
             ${a.timeStart?`<div class="d-times">&#9201; ${a.timeStart}${a.timeEnd?' – '+a.timeEnd:''}</div>`:''}
           </div>
           <div class="dac-btns">
+            ${skipBtn}
             <button class="dac-btn" onclick="openActModal('${key}','${a.id}')" title="Editar">&#9998;</button>
             <button class="dac-btn del" onclick="del('${key}','${a.id}')" title="Eliminar">&#128465;</button>
           </div>
         </div>
         ${a.notes?`<div class="dac-notes">&#128203; ${esc(a.notes)}</div>`:''}
+        ${skipReasonEl}
         ${subHtml}
       </div>`;
     });
@@ -897,9 +953,10 @@ function renderEvaluation() {
         :`<div class="stat-row">
           <div class="stat-box planned"><div class="stat-num">${stats.total}</div><div class="stat-label">Planificadas</div></div>
           <div class="stat-box done-box"><div class="stat-num">${stats.done}</div><div class="stat-label">Logradas</div></div>
-          <div class="stat-box missed"><div class="stat-num">${stats.missed}</div><div class="stat-label">No logradas</div></div>
+          <div class="stat-box missed"><div class="stat-num">${stats.missed}</div><div class="stat-label">No cumplidas</div></div>
+          <div class="stat-box pending-box"><div class="stat-num">${stats.pending}</div><div class="stat-label">Pendientes</div></div>
         </div>
-        <div class="eval-bar">
+        <div class="eval-bar" style="display:flex">
           <div class="eval-bar-done" style="width:${dp}%"></div>
           <div class="eval-bar-miss" style="width:${mp}%"></div>
         </div>`}
@@ -1030,6 +1087,32 @@ function toggleSub(key,actId,subId) { toggleSubAct(fromKey(key),actId,subId); re
 function del(key,id) { delAct(fromKey(key),id); render(); }
 function uid() { return Math.random().toString(36).slice(2)+Date.now().toString(36); }
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ═══════════════════════════════════════════
+//  INCUMPLIMIENTO
+// ═══════════════════════════════════════════
+function openSkipModal(key, id) {
+  document.getElementById('skip-popup-overlay')?.remove();
+  const overlay=document.createElement('div');
+  overlay.id='skip-popup-overlay';
+  overlay.className='skip-popup-overlay';
+  overlay.onclick=e=>{ if(e.target===overlay) overlay.remove(); };
+  overlay.innerHTML=`<div class="skip-popup">
+    <h3>&#10060; ¿Por qué no se cumplió?</h3>
+    <textarea class="skip-reason-inp" id="skip-reason-txt" placeholder="Escribí el motivo (opcional)..."></textarea>
+    <button class="skip-confirm-btn" onclick="confirmSkip('${key}','${id}')">Marcar como no cumplida</button>
+    <button class="skip-cancel-btn" onclick="document.getElementById('skip-popup-overlay')?.remove()">Cancelar</button>
+  </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(()=>document.getElementById('skip-reason-txt')?.focus(),50);
+}
+function confirmSkip(key, id) {
+  const reason=document.getElementById('skip-reason-txt')?.value?.trim()||'';
+  document.getElementById('skip-popup-overlay')?.remove();
+  markSkipped(fromKey(key),id,reason);
+  render();
+}
+function unSkipAct(key, id) { markPending(fromKey(key),id); render(); }
 
 // ═══════════════════════════════════════════
 //  ASIGNAR DÍA A ETAPA
