@@ -598,6 +598,7 @@ window.vincular=()=>{
 };
 
 ll();render();startSync();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/Economia---Personal/sw.js');
 </script>
 </body>
 </html>
