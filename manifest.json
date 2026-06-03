@@ -1,0 +1,17 @@
+{
+  "name": "Mi Planificador",
+  "short_name": "Planificador",
+  "description": "Planificador personal y control de gastos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f0f2f5",
+  "theme_color": "#6c63ff",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
