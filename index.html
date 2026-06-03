@@ -354,6 +354,35 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .ge-save{width:100%;padding:15px;background:#6c63ff;color:white;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;transition:background .15s}
 .ge-save:hover{background:#574fd6}
 .ge-cancel{width:100%;padding:9px;background:none;border:none;color:#9ca3af;font-size:.85rem;cursor:pointer;margin-top:3px}
+
+/* ── GASTOS FIJOS ────────────────────────── */
+.gs-section-hdr{display:flex;align-items:center;justify-content:space-between;margin:18px 0 8px}
+.gs-section-hdr .gs-section-title{margin:0}
+.gs-section-action{font-size:.75rem;color:#6c63ff;font-weight:600;background:none;border:none;cursor:pointer;padding:2px 0}
+.gs-committed{background:#fff8f0;border:1px solid #fed7aa;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.gs-committed-label{font-size:.75rem;color:#c2410c;font-weight:600}
+.gs-committed-amount{font-size:.95rem;font-weight:700;color:#c2410c}
+.gs-fijo-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:white;border-radius:10px;margin-bottom:6px;box-shadow:0 1px 4px rgba(0,0,0,.05);transition:opacity .2s}
+.gs-fijo-item.pagado{opacity:.5}
+.gs-fijo-check{width:24px;height:24px;border-radius:50%;border:2.5px solid #d1d5db;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:white;font-weight:bold;transition:all .18s;user-select:none}
+.gs-fijo-check.ck{background:#22c55e;border-color:#22c55e}
+.gs-fijo-desc{flex:1;font-size:.88rem;font-weight:500;color:#222}
+.gs-fijo-item.pagado .gs-fijo-desc{text-decoration:line-through;color:#9ca3af}
+.gs-fijo-monto{font-size:.88rem;font-weight:700;color:#374151;cursor:pointer;padding:4px 7px;border-radius:6px;transition:background .15s;flex-shrink:0}
+.gs-fijo-monto:hover{background:#f3f4f6}
+.gs-fijo-del{background:none;border:none;color:#e5e7eb;font-size:1rem;cursor:pointer;padding:3px;flex-shrink:0;line-height:1;transition:color .15s}
+.gs-fijo-del:hover{color:#ef4444}
+.gs-copy-empty{text-align:center;padding:20px 16px;background:white;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.05);margin-bottom:6px}
+.gs-copy-empty-txt{font-size:.82rem;color:#9ca3af;margin-bottom:12px}
+.gs-copy-btn{padding:9px 20px;background:#6c63ff;color:white;border:none;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:600}
+.gs-add-fijo-form{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;padding:10px;background:#f9fafb;border-radius:10px}
+.gs-fijo-inp{flex:1;min-width:130px;padding:8px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:.85rem;font-family:inherit;outline:none}
+.gs-fijo-inp:focus{border-color:#6c63ff}
+.gs-fijo-inp-m{width:110px;flex-shrink:0;flex:none}
+.gs-fijo-ok{padding:8px 14px;background:#6c63ff;color:white;border:none;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:600}
+.gs-fijo-cancel-btn{padding:8px 10px;background:none;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;font-size:.82rem;color:#888}
+.gs-add-fijo-btn{width:100%;padding:9px;border:2px dashed #e5e7eb;border-radius:10px;background:none;color:#bbb;font-size:.82rem;cursor:pointer;margin-top:6px;transition:all .18s}
+.gs-add-fijo-btn:hover{border-color:#6c63ff;color:#6c63ff}
 </style>
 </head>
 <body>
@@ -552,7 +581,8 @@ let st = {
   objectives: {},
   evaluations: {},
   evalPeriod: 'day',
-  gastos: []
+  gastos: [],
+  fijos: {}
 };
 
 // Estado del modal (gestionado sin re-render)
@@ -593,18 +623,18 @@ function setSync(s) {
 //  PERSISTENCIA
 // ═══════════════════════════════════════════
 function saveLocal() {
-  localStorage.setItem('planificador_v2', JSON.stringify({ data:st.data, objectives:st.objectives, evaluations:st.evaluations, gastos:st.gastos||[] }));
+  localStorage.setItem('planificador_v2', JSON.stringify({ data:st.data, objectives:st.objectives, evaluations:st.evaluations, gastos:st.gastos||[], fijos:st.fijos||{} }));
 }
 function loadLocal() {
   try {
     const r = JSON.parse(localStorage.getItem('planificador_v2') || localStorage.getItem('planificador_v1') || '{}');
-    st.data = r.data||{}; st.objectives = r.objectives||{}; st.evaluations = r.evaluations||{}; st.gastos = r.gastos||[];
-  } catch { st.data={}; st.objectives={}; st.evaluations={}; st.gastos=[]; }
+    st.data = r.data||{}; st.objectives = r.objectives||{}; st.evaluations = r.evaluations||{}; st.gastos = r.gastos||[]; st.fijos = r.fijos||{};
+  } catch { st.data={}; st.objectives={}; st.evaluations={}; st.gastos=[]; st.fijos={}; }
 }
 function saveFirestore() {
   if (!db) return;
   setSync('guardando');
-  db.collection('planificadores').doc(userId).set({ data:st.data, objectives:st.objectives, evaluations:st.evaluations, gastos:st.gastos||[] })
+  db.collection('planificadores').doc(userId).set({ data:st.data, objectives:st.objectives, evaluations:st.evaluations, gastos:st.gastos||[], fijos:st.fijos||{} })
     .then(()=>setSync('sincronizado')).catch(()=>setSync('error'));
 }
 function loadFirestore(cb) {
@@ -612,7 +642,7 @@ function loadFirestore(cb) {
   setSync('guardando');
   db.collection('planificadores').doc(userId).get()
     .then(snap => {
-      if (snap.exists) { const d=snap.data(); st.data=d.data||{}; st.objectives=d.objectives||{}; st.evaluations=d.evaluations||{}; st.gastos=d.gastos||[]; saveLocal(); }
+      if (snap.exists) { const d=snap.data(); st.data=d.data||{}; st.objectives=d.objectives||{}; st.evaluations=d.evaluations||{}; st.gastos=d.gastos||[]; st.fijos=d.fijos||{}; saveLocal(); }
       setSync('sincronizado'); cb&&cb();
     }).catch(()=>{ setSync('error'); cb&&cb(); });
 }
@@ -1176,7 +1206,7 @@ function applyNewId() {
   const id=document.getElementById('new-id-input')?.value?.trim();
   if (!id) return;
   userId=id; localStorage.setItem('plan_uid',userId);
-  closeIdModal(); st.data={}; st.objectives={}; st.evaluations={}; st.gastos=[];
+  closeIdModal(); st.data={}; st.objectives={}; st.evaluations={}; st.gastos=[]; st.fijos={};
   loadFirestore(()=>render());
 }
 
@@ -1257,19 +1287,20 @@ function doAssignDay(ym, objId, stageId, dayKey) {
 //  GASTOS — CONSTANTES
 // ═══════════════════════════════════════════
 const GASTO_CATS = {
-  cafe:       { emoji:'☕', label:'Café / Kiosco',      tipo:'gasto',   nivel:'chico'    },
-  transport:  { emoji:'🚌', label:'Transporte',          tipo:'gasto',   nivel:'chico'    },
-  comida:     { emoji:'🍔', label:'Comida / Delivery',   tipo:'gasto',   nivel:'variable' },
-  super_:     { emoji:'🛒', label:'Supermercado',        tipo:'gasto',   nivel:'variable' },
-  servicios:  { emoji:'💡', label:'Servicios',           tipo:'gasto',   nivel:'fijo'     },
-  salud:      { emoji:'🏥', label:'Salud',               tipo:'gasto',   nivel:'variable' },
-  ropa:       { emoji:'👕', label:'Ropa',                tipo:'gasto',   nivel:'variable' },
-  entrete:    { emoji:'🎬', label:'Entretenimiento',     tipo:'gasto',   nivel:'variable' },
-  grande:     { emoji:'💸', label:'Gasto grande',        tipo:'gasto',   nivel:'grande'   },
-  otro:       { emoji:'📦', label:'Otro gasto',          tipo:'gasto',   nivel:'variable' },
-  sueldo:     { emoji:'💰', label:'Sueldo',              tipo:'ingreso', nivel:null       },
-  freelance:  { emoji:'💻', label:'Freelance / Extra',   tipo:'ingreso', nivel:null       },
-  ingreso_ot: { emoji:'📈', label:'Otro ingreso',        tipo:'ingreso', nivel:null       }
+  comida:    { emoji:'🍔', label:'Comida',          tipo:'gasto'   },
+  mercado:   { emoji:'🛒', label:'Mercado / Super',  tipo:'gasto'   },
+  nafta:     { emoji:'⛽', label:'Nafta / Auto',     tipo:'gasto'   },
+  transport: { emoji:'🚌', label:'Transporte',       tipo:'gasto'   },
+  ropa:      { emoji:'👕', label:'Ropa / Calzado',   tipo:'gasto'   },
+  salud:     { emoji:'💊', label:'Salud / Farmacia', tipo:'gasto'   },
+  entrete:   { emoji:'🎬', label:'Entretenimiento',  tipo:'gasto'   },
+  futbol:    { emoji:'⚽', label:'Fútbol',           tipo:'gasto'   },
+  deporte:   { emoji:'🥋', label:'Deporte',          tipo:'gasto'   },
+  hogar:     { emoji:'🏠', label:'Hogar',            tipo:'gasto'   },
+  varios:    { emoji:'📦', label:'Varios',           tipo:'gasto'   },
+  sueldo:    { emoji:'💰', label:'Sueldo',           tipo:'ingreso' },
+  extras:    { emoji:'⏰', label:'Horas extras',     tipo:'ingreso' },
+  empren:    { emoji:'🚀', label:'Emprendimiento',   tipo:'ingreso' }
 };
 const GASTO_CAT_KEYS   = Object.keys(GASTO_CATS).filter(k=>GASTO_CATS[k].tipo==='gasto');
 const INGRESO_CAT_KEYS = Object.keys(GASTO_CATS).filter(k=>GASTO_CATS[k].tipo==='ingreso');
@@ -1293,10 +1324,62 @@ function delGastoConfirm(id) {
   const tx=(st.gastos||[]).find(t=>t.id===id);
   if(!tx) return;
   const cat=GASTO_CATS[tx.category]||{emoji:'📦',label:tx.category};
-  const signo=tx.type==='ingreso'?'+':'-';
+  const signo=tx.type==='ingreso'?'+':'−';
   if(confirm(`¿Eliminar este movimiento?\n${cat.emoji} ${tx.description||cat.label}  ${signo}${fmtARS(tx.amount)}`)){
     delGasto(id); render();
   }
+}
+
+// ═══════════════════════════════════════════
+//  GASTOS FIJOS — CRUD
+// ═══════════════════════════════════════════
+function getFijos(ym) { return (st.fijos||{})[ym]||[]; }
+function setFijos(ym, arr) {
+  if(!st.fijos) st.fijos={};
+  if(arr.length===0) delete st.fijos[ym]; else st.fijos[ym]=arr;
+  save();
+}
+function toggleFijoRender(ym, id) {
+  setFijos(ym, getFijos(ym).map(f=>f.id===id?{...f,pagado:!f.pagado}:f));
+  render();
+}
+function delFijoRender(ym, id) {
+  const f=getFijos(ym).find(f=>f.id===id);
+  if(f&&confirm(`¿Eliminar "${f.desc}"?`)){ setFijos(ym,getFijos(ym).filter(x=>x.id!==id)); render(); }
+}
+function editFijoMonto(ym, id, current) {
+  const val=prompt('Nuevo monto:', current);
+  if(val===null) return;
+  const n=parseFloat(String(val).replace(/[^0-9.]/g,''));
+  if(!n||n<=0) return;
+  setFijos(ym, getFijos(ym).map(f=>f.id===id?{...f,monto:n}:f));
+  render();
+}
+function copyFijosAndRender(ym) {
+  const d=fromKey(ym+'-01');
+  const prev=new Date(d.getFullYear(),d.getMonth()-1,1);
+  const prevYm=ymk(prev);
+  setFijos(ym, getFijos(prevYm).map(f=>({...f,id:uid(),pagado:false})));
+  render();
+}
+function showAddFijo() {
+  const form=document.getElementById('gs-add-fijo-form');
+  if(!form) return;
+  const open=form.style.display!=='none'&&form.style.display!=='';
+  form.style.display=open?'none':'flex';
+  if(!open) setTimeout(()=>document.getElementById('gf-desc')?.focus(),50);
+}
+function saveAddFijo(ym) {
+  const desc=document.getElementById('gf-desc')?.value?.trim();
+  const monto=parseFloat(document.getElementById('gf-monto')?.value||'0');
+  if(!desc||!monto||monto<=0) return;
+  const arr=getFijos(ym);
+  arr.push({id:uid(),desc,monto,pagado:false});
+  setFijos(ym,arr);
+  document.getElementById('gf-desc').value='';
+  document.getElementById('gf-monto').value='';
+  document.getElementById('gs-add-fijo-form').style.display='none';
+  render();
 }
 
 // ═══════════════════════════════════════════
@@ -1310,65 +1393,92 @@ function fmtARS(n) {
 //  GASTOS — RENDER
 // ═══════════════════════════════════════════
 function renderGastos() {
-  const ym = ymk(st.date);
-  const txs = getGastosMonth(ym);
+  const ym   = ymk(st.date);
+  const txs  = getGastosMonth(ym);
+  const fijos = getFijos(ym);
 
-  const totalIngresos = txs.filter(t=>t.type==='ingreso').reduce((s,t)=>s+t.amount,0);
-  const totalGastos   = txs.filter(t=>t.type==='gasto').reduce((s,t)=>s+t.amount,0);
-  const balance       = totalIngresos - totalGastos;
+  // Totales
+  const totalIngresos       = txs.filter(t=>t.type==='ingreso').reduce((s,t)=>s+t.amount,0);
+  const totalVariables      = txs.filter(t=>t.type==='gasto').reduce((s,t)=>s+t.amount,0);
+  const totalFijosPagados   = fijos.filter(f=>f.pagado).reduce((s,f)=>s+(f.monto||0),0);
+  const totalFijosComprometidos = fijos.filter(f=>!f.pagado).reduce((s,f)=>s+(f.monto||0),0);
+  const disponible          = totalIngresos - totalFijosPagados - totalVariables;
 
-  // Balance card
+  // ── Balance card ──────────────────────────
   const balHtml=`<div class="gs-balance-card">
-    <div class="gs-balance-label">Balance del mes</div>
-    <div class="gs-balance-amount${balance<0?' neg':''}">${balance>=0?'+':'−'} ${fmtARS(balance)}</div>
+    <div class="gs-balance-label">Disponible real</div>
+    <div class="gs-balance-amount${disponible<0?' neg':''}">${disponible>=0?'+':'−'} ${fmtARS(disponible)}</div>
     <div class="gs-row">
       <div class="gs-mini"><div class="gs-mini-label">&#8593; Ingresos</div><div class="gs-mini-amount">+${fmtARS(totalIngresos)}</div></div>
-      <div class="gs-mini"><div class="gs-mini-label">&#8595; Gastos</div><div class="gs-mini-amount">−${fmtARS(totalGastos)}</div></div>
+      <div class="gs-mini"><div class="gs-mini-label">&#9679; Fijos pagados</div><div class="gs-mini-amount">−${fmtARS(totalFijosPagados)}</div></div>
+      <div class="gs-mini"><div class="gs-mini-label">&#8595; Variables</div><div class="gs-mini-amount">−${fmtARS(totalVariables)}</div></div>
     </div>
   </div>`;
 
-  // Efecto goteo (gastos chicos)
-  const chicos     = txs.filter(t=>t.type==='gasto'&&GASTO_CATS[t.category]?.nivel==='chico');
-  const chicosTotal = chicos.reduce((s,t)=>s+t.amount,0);
-  const pct = totalGastos>0?Math.round(chicosTotal/totalGastos*100):0;
-  const goteoHtml = chicosTotal>0 ? `<div class="gs-goteo-card">
-    <div class="gs-goteo-head">
-      <span class="gs-goteo-title">&#9749; Gastos chicos (efecto goteo)</span>
-      <span class="gs-goteo-amount">−${fmtARS(chicosTotal)}</span>
-    </div>
-    <div class="gs-goteo-sub">${chicos.length} transacciones &middot; ${pct}&nbsp;% del total</div>
+  // ── Comprometido ──────────────────────────
+  const committedHtml = totalFijosComprometidos>0 ? `<div class="gs-committed">
+    <span class="gs-committed-label">&#9888; Comprometido sin pagar</span>
+    <span class="gs-committed-amount">−${fmtARS(totalFijosComprometidos)}</span>
   </div>` : '';
 
-  // Categorías
+  // ── Gastos Fijos ──────────────────────────
+  let fijosRows='';
+  if(fijos.length===0) {
+    const prev=new Date(st.date.getFullYear(),st.date.getMonth()-1,1);
+    const hasPrev=getFijos(ymk(prev)).length>0;
+    fijosRows=`<div class="gs-copy-empty">
+      <div class="gs-copy-empty-txt">No hay gastos fijos este mes.</div>
+      ${hasPrev?`<button class="gs-copy-btn" onclick="copyFijosAndRender('${ym}')">Copiar del mes anterior</button>`:''}
+    </div>`;
+  } else {
+    fijosRows=fijos.map(f=>`<div class="gs-fijo-item${f.pagado?' pagado':''}">
+      <div class="gs-fijo-check${f.pagado?' ck':''}" onclick="toggleFijoRender('${ym}','${f.id}')">${f.pagado?'&#10003;':''}</div>
+      <div class="gs-fijo-desc">${esc(f.desc)}</div>
+      <div class="gs-fijo-monto" onclick="editFijoMonto('${ym}','${f.id}',${f.monto})" title="Tap para editar">${fmtARS(f.monto)}</div>
+      <button class="gs-fijo-del" onclick="delFijoRender('${ym}','${f.id}')">&#10005;</button>
+    </div>`).join('');
+  }
+  const fijosHtml=`
+    <div class="gs-section-hdr">
+      <div class="gs-section-title">Gastos Fijos</div>
+      <button class="gs-section-action" onclick="showAddFijo()">+ Agregar</button>
+    </div>
+    ${fijosRows}
+    <div id="gs-add-fijo-form" class="gs-add-fijo-form" style="display:none">
+      <input type="text"   class="gs-fijo-inp"        id="gf-desc"  placeholder="Descripción...">
+      <input type="number" class="gs-fijo-inp gs-fijo-inp-m" id="gf-monto" placeholder="Monto" min="0" onkeydown="if(event.key==='Enter')saveAddFijo('${ym}')">
+      <button class="gs-fijo-ok"         onclick="saveAddFijo('${ym}')">OK</button>
+      <button class="gs-fijo-cancel-btn" onclick="document.getElementById('gs-add-fijo-form').style.display='none'">&#10005;</button>
+    </div>`;
+
+  // ── Variables — categorías ────────────────
   const catTotals={};
   txs.filter(t=>t.type==='gasto').forEach(t=>{ catTotals[t.category]=(catTotals[t.category]||0)+t.amount; });
   const maxCat=Math.max(1,...Object.values(catTotals));
   const catRows=Object.entries(catTotals).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v])=>{
-    const cat=GASTO_CATS[k]||{emoji:'📦',label:k,nivel:'variable'};
+    const cat=GASTO_CATS[k]||{emoji:'📦',label:k};
     const w=Math.round(v/maxCat*100);
     return `<div class="gs-cat-bar">
       <div class="gs-cat-emoji">${cat.emoji}</div>
       <div class="gs-cat-info">
         <div class="gs-cat-name">${cat.label}</div>
-        <div class="gs-cat-track"><div class="gs-cat-fill${cat.nivel==='chico'?' chico':''}" style="width:${w}%"></div></div>
+        <div class="gs-cat-track"><div class="gs-cat-fill" style="width:${w}%"></div></div>
       </div>
       <div class="gs-cat-amount">−${fmtARS(v)}</div>
     </div>`;
   }).join('');
-  const catsHtml=catRows ? `<div class="gs-section-title">Por categor&iacute;a</div>
-    <div style="background:white;border-radius:14px;padding:10px 16px;box-shadow:0 2px 10px rgba(0,0,0,.05)">${catRows}</div>` : '';
+  const catsHtml=catRows?`<div style="background:white;border-radius:14px;padding:10px 16px;box-shadow:0 2px 10px rgba(0,0,0,.05);margin-bottom:10px">${catRows}</div>`:'';
 
-  // Transacciones agrupadas por día
+  // ── Variables — movimientos por día ───────
   const byDay={};
   [...txs].sort((a,b)=>b.date.localeCompare(a.date)||(b.createdAt-a.createdAt))
     .forEach(t=>{ if(!byDay[t.date]) byDay[t.date]=[]; byDay[t.date].push(t); });
   let txHtml='';
-  if(Object.keys(byDay).length===0) {
-    txHtml=`<div class="empty"><div class="empty-icon">&#128176;</div><div class="empty-text">No hay movimientos este mes.<br>Toc&aacute; + para agregar el primero.</div></div>`;
+  if(Object.keys(byDay).length===0){
+    txHtml=`<div class="empty"><div class="empty-icon">&#128176;</div><div class="empty-text">No hay movimientos variables.<br>Toc&aacute; + para agregar el primero.</div></div>`;
   } else {
     Object.entries(byDay).forEach(([date,list])=>{
-      const d=fromKey(date);
-      const isT=dk(new Date())===date;
+      const d=fromKey(date), isT=dk(new Date())===date;
       const label=isT?'Hoy':`${DIA_CORTO[diIdx(d)]} ${d.getDate()}`;
       txHtml+=`<div class="gs-tx-day">${label} <span style="font-weight:400;text-transform:none">${MESES[d.getMonth()].slice(0,3)}</span></div>`;
       list.forEach(t=>{
@@ -1383,15 +1493,20 @@ function renderGastos() {
             <div class="gs-tx-cat">${cat.label}</div>
           </div>
           <div class="gs-tx-amount ${cls}">${signo}${fmtARS(t.amount)}</div>
-          <button class="gs-tx-del" onclick="delGastoConfirm('${t.id}')" title="Eliminar">&#10005;</button>
+          <button class="gs-tx-del" onclick="delGastoConfirm('${t.id}')">&#10005;</button>
         </div>`;
       });
     });
   }
-  const txSection=`<div class="gs-section-title">Movimientos</div>${txHtml}`;
+
+  const variablesHtml=`
+    <div class="gs-section-hdr" style="margin-top:22px">
+      <div class="gs-section-title">Gastos Variables</div>
+    </div>
+    ${catsHtml}${txHtml}`;
 
   return `<div class="container"><div class="gastos-wrap">
-    ${balHtml}${goteoHtml}${catsHtml}${txSection}
+    ${balHtml}${committedHtml}${fijosHtml}${variablesHtml}
     <button class="gs-fab" onclick="openGE()">+</button>
   </div></div>`;
 }
@@ -1399,7 +1514,7 @@ function renderGastos() {
 // ═══════════════════════════════════════════
 //  GASTOS — MODAL ESTADO
 // ═══════════════════════════════════════════
-let gs = { type:'gasto', amount:'', category:'cafe', description:'', editId:null };
+let gs = { type:'gasto', amount:'', category:'comida', description:'', editId:null };
 
 function openGE(editId) {
   gs.editId = editId||null;
@@ -1407,7 +1522,7 @@ function openGE(editId) {
     const tx=(st.gastos||[]).find(t=>t.id===editId);
     if (tx) { gs.type=tx.type; gs.amount=String(tx.amount); gs.category=tx.category; gs.description=tx.description||''; }
   } else {
-    gs.type='gasto'; gs.amount=''; gs.category='cafe'; gs.description='';
+    gs.type='gasto'; gs.amount=''; gs.category='comida'; gs.description='';
   }
   gsUpdateUI();
   document.getElementById('ge-overlay').style.display='flex';
@@ -1417,7 +1532,7 @@ function closeGE() { document.getElementById('ge-overlay').style.display='none';
 
 function gsSetType(t) {
   gs.type=t;
-  gs.category=t==='gasto'?'cafe':'sueldo';
+  gs.category=t==='gasto'?'comida':'sueldo';
   gsUpdateUI();
 }
 function gsSetCat(k) {
