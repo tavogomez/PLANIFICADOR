@@ -1,4 +1,4 @@
-const CACHE = 'eco-v2';
+const CACHE = 'eco-v3';
 const ASSETS = ['/Economia---Personal/', '/Economia---Personal/index.html', '/Economia---Personal/manifest.json', '/Economia---Personal/icon.svg'];
 
 self.addEventListener('install', e => {
