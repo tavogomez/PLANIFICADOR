@@ -403,6 +403,7 @@ function sl(){
   localStorage.setItem('eco_f',JSON.stringify(st.fijos));
   localStorage.setItem('eco_se',JSON.stringify(st.sueldoEst));
   localStorage.setItem('eco_ob',JSON.stringify(st.objetivos));
+  localStorage.setItem('eco_ts',String(Date.now()));
 }
 function ll(){
   try{st.gastos=JSON.parse(localStorage.getItem('eco_g')||'[]');}catch(e){st.gastos=[];}
@@ -418,13 +419,16 @@ function startSync(){
   onSnapshot(doc(db,'economia',DEV),snap=>{
     if(!snap.exists()){saveCloud();return;}
     const d=snap.data();
-    if(d._session===SESSION)return; // mi propio guardado, no re-renderizar
+    if(d._session===SESSION)return; // mi propio guardado
+    const localTs=parseInt(localStorage.getItem('eco_ts')||'0');
+    if(d.ts&&d.ts<=localTs)return; // local es igual o más nuevo, no pisar
     st.gastos=d.gastos||[];st.fijos=d.fijos||{};st.sueldoEst=d.sueldoEst||{};st.objetivos=d.objetivos||[];
     sl();setSync('online');render();
   },()=>setSync('local'));
 }
 function saveCloud(){
-  setDoc(doc(db,'economia',DEV),{gastos:st.gastos,fijos:st.fijos,sueldoEst:st.sueldoEst,objetivos:st.objetivos,_session:SESSION})
+  const ts=parseInt(localStorage.getItem('eco_ts')||String(Date.now()));
+  setDoc(doc(db,'economia',DEV),{gastos:st.gastos,fijos:st.fijos,sueldoEst:st.sueldoEst,objetivos:st.objetivos,_session:SESSION,ts})
     .then(()=>setSync('online'))
     .catch(()=>setSync('local'));
 }
@@ -783,7 +787,7 @@ window.vincular=()=>{
 ll();render();startSync();initCatDelegation();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/Economia---Personal/sw.js');
 // version tag — visible in console
-console.log('%c Economía v8 ', 'background:#6c63ff;color:#fff;border-radius:4px;padding:2px 8px');
+console.log('%c Economía v9 ', 'background:#6c63ff;color:#fff;border-radius:4px;padding:2px 8px');
 </script>
 </body>
 </html>
