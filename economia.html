@@ -113,7 +113,7 @@ header{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;padding:
 /* OVERLAY / SHEET */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:none;align-items:flex-end;justify-content:center}
 .ov.on{display:flex}
-.sh{background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:480px;padding:18px 18px calc(18px + var(--sb));max-height:93dvh;overflow-y:auto;animation:sup .26s ease;-webkit-overflow-scrolling:touch}
+.sh{background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:480px;padding:18px 18px calc(18px + var(--sb));max-height:93dvh;overflow-y:auto;animation:sup .26s ease}
 /* INLINE ERR */
 .err-msg{font-size:.8rem;color:var(--r);text-align:center;padding:8px 12px;background:#fff5f5;border-radius:10px;margin-bottom:10px;display:none}
 .err-msg.on{display:block}
@@ -621,10 +621,11 @@ window.setTipo=t=>{
 };
 window.setDDir=d=>{gs.ddir=d;document.getElementById('dd-me').classList.toggle('on',d==='deben');document.getElementById('dd-le').classList.toggle('on',d==='debo');};
 
+window.pickCat=id=>{gs.cat=id;buildCats();document.getElementById('err-cat').classList.remove('on');};
 function buildCats(){
   if(gs.tipo==='d'){document.getElementById('cats-box').innerHTML='';return;}
   const cats=gs.tipo==='g'?CGAS:CING;
-  document.getElementById('cats-box').innerHTML=`<div class="catg">${cats.map(c=>`<button class="cb${gs.cat===c.id?' on':''}" data-cat="${c.id}"><span class="ce">${c.e}</span><span class="cl">${c.l}</span></button>`).join('')}</div>`;
+  document.getElementById('cats-box').innerHTML=`<div class="catg">${cats.map(c=>`<button class="cb${gs.cat===c.id?' on':''}" data-cat="${c.id}" onclick="pickCat('${c.id}')"><span class="ce">${c.e}</span><span class="cl">${c.l}</span></button>`).join('')}</div>`;
 }
 
 window.saveAdd=()=>{
@@ -712,7 +713,7 @@ window.vincular=()=>{
 ll();render();startSync();initCatDelegation();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/Economia---Personal/sw.js');
 // version tag — visible in console
-console.log('%c Economía v4 ', 'background:#6c63ff;color:#fff;border-radius:4px;padding:2px 8px');
+console.log('%c Economía v5 ', 'background:#6c63ff;color:#fff;border-radius:4px;padding:2px 8px');
 </script>
 </body>
 </html>
