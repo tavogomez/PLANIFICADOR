@@ -391,13 +391,20 @@ function ll(){
 
 // ── FIREBASE
 function setSync(s){document.getElementById('sdot').className='sdot'+(s!=='online'?' w':'');document.getElementById('slbl').textContent=s;}
-function saveCloud(){setDoc(doc(db,'economia',DEV),{gastos:st.gastos,fijos:st.fijos,sueldoEst:st.sueldoEst,objetivos:st.objetivos}).then(()=>setSync('online')).catch(()=>setSync('local'));}
 function save(){sl();saveCloud();}
+let _syncing=false;
 function startSync(){
   onSnapshot(doc(db,'economia',DEV),snap=>{
+    if(_syncing)return;
     if(snap.exists()){const d=snap.data();st.gastos=d.gastos||[];st.fijos=d.fijos||{};st.sueldoEst=d.sueldoEst||{};st.objetivos=d.objetivos||[];sl();setSync('online');render();}
     else{saveCloud();}
   },()=>setSync('local'));
+}
+function saveCloud(){
+  _syncing=true;
+  setDoc(doc(db,'economia',DEV),{gastos:st.gastos,fijos:st.fijos,sueldoEst:st.sueldoEst,objetivos:st.objetivos})
+    .then(()=>{setSync('online');setTimeout(()=>_syncing=false,1000);})
+    .catch(()=>{setSync('local');_syncing=false;});
 }
 
 // ── NAV
@@ -624,12 +631,18 @@ window.saveAdd=()=>{
   const amt=parseInt(gs.amt||'0');
   if(!amt){document.getElementById('err-amt').classList.add('on');return;}
   if(gs.tipo!=='d'&&!gs.cat){document.getElementById('err-cat').classList.add('on');return;}
-  document.getElementById('err-amt').classList.remove('on');
-  document.getElementById('err-cat').classList.remove('on');
-  const hoy=new Date(),date=`${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+  // Cerrar modal PRIMERO
+  document.getElementById('ov-add').classList.remove('on');
+  // Guardar datos
+  const hoy=new Date();
+  const date=`${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
   const type=gs.tipo==='d'?gs.ddir:gs.tipo;
-  st.gastos.push({id:uid(),date,type,cat:gs.cat,amt,desc:document.getElementById('desc-inp').value.trim(),persona:gs.tipo==='d'?document.getElementById('d-persona').value.trim():undefined});
-  save();st.mes=hoy.getMonth();st.anio=hoy.getFullYear();closeOv('ov-add');render();
+  const desc=document.getElementById('desc-inp').value.trim();
+  const persona=gs.tipo==='d'?document.getElementById('d-persona').value.trim():undefined;
+  st.gastos.push({id:uid(),date,type,cat:gs.cat,amt,desc,persona});
+  st.mes=hoy.getMonth();st.anio=hoy.getFullYear();
+  sl();render();
+  saveCloud();
 };
 
 // ── EDITAR MOVIMIENTO VARIABLE
