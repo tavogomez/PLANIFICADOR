@@ -1,8 +1,8 @@
-const CACHE = 'eco-v3';
-const ASSETS = ['/Economia---Personal/', '/Economia---Personal/index.html', '/Economia---Personal/manifest.json', '/Economia---Personal/icon.svg'];
+const CACHE = 'eco-v4';
+const STATIC = ['/Economia---Personal/manifest.json', '/Economia---Personal/icon.svg'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(STATIC)));
   self.skipWaiting();
 });
 
@@ -13,16 +13,31 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(r => {
-        if (r && r.status === 200 && r.type === 'basic') {
-          const clone = r.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
+  const url = new URL(e.request.url);
+  const isHTML = url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname === '/Economia---Personal';
+
+  if (isHTML) {
+    // Network-first para HTML: siempre busca actualización, cae al caché si offline
+    e.respondWith(
+      fetch(e.request).then(r => {
+        if (r && r.status === 200) {
+          caches.open(CACHE).then(c => c.put(e.request, r.clone()));
         }
         return r;
-      });
-    })
-  );
+      }).catch(() => caches.match(e.request))
+    );
+  } else {
+    // Cache-first para assets estáticos
+    e.respondWith(
+      caches.match(e.request).then(cached => {
+        if (cached) return cached;
+        return fetch(e.request).then(r => {
+          if (r && r.status === 200 && r.type === 'basic') {
+            caches.open(CACHE).then(c => c.put(e.request, r.clone()));
+          }
+          return r;
+        });
+      })
+    );
+  }
 });
