@@ -201,6 +201,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     <button class="chip on" id="ch-todos"  onclick="setChip('todos')">Todos</button>
     <button class="chip"    id="ch-fijos"  onclick="setChip('fijos')">Fijos</button>
     <button class="chip"    id="ch-vars"   onclick="setChip('vars')">Variables</button>
+    <button class="chip"    id="ch-ahorros" onclick="setChip('ahorros')">💰 Ahorros</button>
     <button class="chip"    id="ch-deudas" onclick="setChip('deudas')">Deudas</button>
   </div>
   <button class="copy-btn" onclick="copyFijos()">📋 Copiar fijos del mes anterior</button>
@@ -279,6 +280,25 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   <input class="inp" id="edit-desc-inp" placeholder="Descripción (opcional)">
   <button class="bm" onclick="saveEdit()">Guardar cambios</button>
   <button class="bs" onclick="closeOv('ov-edit')">Cancelar</button>
+</div>
+</div>
+
+<!-- SHEET: DEPOSITAR AHORRO -->
+<div class="ov" id="ov-dep" onclick="ovck(event,'ov-dep')">
+<div class="sh">
+  <div class="hdl"></div>
+  <div class="shttl" id="dep-ttl">Depositar ahorro</div>
+  <div id="dep-amt-disp" class="adt i">$ 0</div>
+  <div id="err-dep-amt" class="err-msg">⚠️ Ingresá un monto</div>
+  <div class="np">
+    <button class="nk" onclick="dnpk('1')">1</button><button class="nk" onclick="dnpk('2')">2</button><button class="nk" onclick="dnpk('3')">3</button>
+    <button class="nk" onclick="dnpk('4')">4</button><button class="nk" onclick="dnpk('5')">5</button><button class="nk" onclick="dnpk('6')">6</button>
+    <button class="nk" onclick="dnpk('7')">7</button><button class="nk" onclick="dnpk('8')">8</button><button class="nk" onclick="dnpk('9')">9</button>
+    <button class="nk w" onclick="dnpk('0')">0</button><button class="nk" onclick="dnkd()">⌫</button>
+  </div>
+  <input class="inp" id="dep-desc-inp" placeholder="Nota (opcional)">
+  <button class="bm" onclick="saveDeposit()">Depositar</button>
+  <button class="bs" onclick="closeOv('ov-dep')">Cancelar</button>
 </div>
 </div>
 
@@ -410,7 +430,7 @@ function saveCloud(){
 // ── NAV
 window.chMes=d=>{st.mes+=d;if(st.mes<0){st.mes=11;st.anio--;}if(st.mes>11){st.mes=0;st.anio++;}render();};
 window.setTab=t=>{st.tab=t;['res','mov','obj'].forEach(x=>{document.getElementById('v-'+x).classList.toggle('on',x===t);document.getElementById('nb-'+x).classList.toggle('on',x===t);});};
-window.setChip=c=>{st.chip=c;['todos','fijos','vars','deudas'].forEach(x=>document.getElementById('ch-'+x).classList.toggle('on',x===c));renderMov();};
+window.setChip=c=>{st.chip=c;['todos','fijos','vars','ahorros','deudas'].forEach(x=>document.getElementById('ch-'+x).classList.toggle('on',x===c));renderMov();};
 
 // ── RENDER
 function render(){
@@ -427,6 +447,8 @@ function renderRes(){
   const gFij=fArr.reduce((a,f)=>a+f.monto,0);
   const gVar=vars.filter(g=>g.type==='g').reduce((a,g)=>a+g.amt,0);
   const gTot=gFij+gVar;
+  const depAhorro=vars.filter(g=>g.type==='ahorro').reduce((a,g)=>a+g.amt,0);
+  const disponible=base-gTot-depAhorro;
   document.getElementById('sueldo-disp').textContent=fmt(base||sue);
 
   const l70=base*.7,l20=base*.2,l10=base*.1;
@@ -437,8 +459,13 @@ function renderRes(){
   const ahorrado=st.objetivos.filter(o=>!o.esEmerg).reduce((a,o)=>a+o.actual,0);
   const pA=l20>0?ahorrado/l20:0,colA=pA>=1?'fg':pA>=.5?'fy':'fr';
   const pR=l10>0?emerg.actual/l10:0,colR=pR>=1?'fg':pR>=.5?'fy':'fr';
+  const dispCol=disponible>=0?'var(--g)':'var(--r)';
 
   document.getElementById('bars-card').innerHTML=`
+    <div class="srow" style="margin-bottom:8px;padding-bottom:10px;border-bottom:1px solid #f0f0f0">
+      <span class="slabel">Disponible este mes</span>
+      <span style="font-size:1.05rem;font-weight:800;color:${dispCol}">${fmt(disponible)}</span>
+    </div>
     <div class="bwrap">
       <div class="btop"><span class="blbl">💸 Gastos (70%)</span><span class="binfo">${fmt(gTot)} de ${fmt(l70)}</span></div>
       <div class="bbg"><div class="bfill ${colG}" style="width:${Math.min(pG*100,100).toFixed(1)}%"></div></div>
@@ -447,7 +474,7 @@ function renderRes(){
     <div class="bwrap">
       <div class="btop"><span class="blbl">💰 Ahorro (20%)</span><span class="binfo">${fmt(ahorrado)} de ${fmt(l20)}</span></div>
       <div class="bbg"><div class="bfill ${colA}" style="width:${Math.min(pA*100,100).toFixed(1)}%"></div></div>
-      <div class="bsub"><span>Objetivo ${fmt(l20)}</span><span>${(pA*100).toFixed(0)}% alcanzado</span></div>
+      <div class="bsub"><span>Depositado: ${fmt(depAhorro)}</span><span>${(pA*100).toFixed(0)}% alcanzado</span></div>
     </div>
     <div class="bwrap">
       <div class="btop"><span class="blbl">🏦 Reserva (10%)</span><span class="binfo">${fmt(emerg.actual)} de ${fmt(l10)}</span></div>
@@ -512,6 +539,17 @@ function renderMov(){
     }
     if(!gv.length&&!iv.length&&chip==='vars'){html=`<div class="empty"><div class="empty-i">📝</div><div class="empty-t">Sin movimientos variables este mes.</div></div>`;}
   }
+  if(chip==='todos'||chip==='ahorros'){
+    const av=vars.filter(g=>g.type==='ahorro').sort((a,b)=>b.date.localeCompare(a.date));
+    if(av.length){
+      const totAh=av.reduce((a,g)=>a+g.amt,0);
+      html+=`<div class="dhdr">💰 Ahorros <span style="font-weight:800;color:var(--p);float:right">${fmt(totAh)}</span></div>`;
+      html+=av.map(g=>{
+        const d=new Date(g.date+'T12:00').toLocaleDateString('es-AR',{day:'2-digit',month:'short'});
+        return`<div class="item"><div class="iico">💰</div><div class="iinfo"><div class="icat">${g.desc||'Ahorro'}</div><div class="idesc">${g.desc||'—'}</div><div class="idate">${d}</div></div><div class="iright"><div class="iamt i">+${fmt(g.amt)}</div><button class="idel" onclick="delG('${g.id}')">🗑️</button></div></div>`;
+      }).join('');
+    } else if(chip==='ahorros'){html=`<div class="empty"><div class="empty-i">💰</div><div class="empty-t">Sin depósitos de ahorro este mes.</div></div>`;}
+  }
   if(chip==='todos'||chip==='deudas'){
     const dv=vars.filter(g=>g.type==='deben'||g.type==='debo');
     if(dv.length){html+=`<div class="dhdr">🤝 Deudas</div>`;html+=dv.map(movHTML).join('');}
@@ -554,7 +592,7 @@ function renderObj(){
   if(!emerg){emerg={id:'emerg',nombre:'Fondo de emergencia',meta:0,actual:0,esEmerg:true};st.objetivos.push(emerg);}
   const pE=l10>0?emerg.actual/l10:0,cE=pE>=1?'fg':pE>=.5?'fy':'fr';
   document.getElementById('emerg-card').innerHTML=`<div class="pcard" style="margin-bottom:12px">
-    <div class="ptop"><span class="pname">🏦 Fondo de emergencia</span><button class="idel" style="opacity:.6;font-size:1rem" onclick="editEmerg()">✏️</button></div>
+    <div class="ptop"><span class="pname">🏦 Fondo de emergencia</span><div style="display:flex;gap:6px"><button class="badd" onclick="openDeposit('${emerg.id||'emerg'}','Fondo de emergencia',true)">+ Depositar</button><button class="idel" style="opacity:.6;font-size:1rem" onclick="editEmerg()">✏️</button></div></div>
     <div class="psub"><span>Ahorrado: ${fmt(emerg.actual)}</span><span>Objetivo mensual: ${fmt(l10)}</span></div>
     <div class="pbg"><div class="pfill ${cE}" style="width:${Math.min(pE*100,100).toFixed(1)}%"></div></div>
     <div class="pnote">${(pE*100).toFixed(0)}% del objetivo del mes</div>
@@ -562,7 +600,7 @@ function renderObj(){
   const goals=st.objetivos.filter(o=>!o.esEmerg);
   document.getElementById('goals-list').innerHTML=goals.length?goals.map(g=>{
     const p=g.meta>0?g.actual/g.meta:0,col=p>=1?'fg':p>=.5?'fy':'fr';
-    return`<div class="pcard"><div class="ptop"><span class="pname">🎯 ${g.nombre}</span><div style="display:flex;gap:6px"><button class="idel" style="opacity:.6;font-size:1rem" onclick="editGoal('${g.id}')">✏️</button><button class="idel" style="opacity:.6;font-size:1rem" onclick="delGoal('${g.id}')">🗑️</button></div></div><div class="psub"><span>Ahorrado: ${fmt(g.actual)}</span><span>Meta: ${fmt(g.meta)}</span></div><div class="pbg"><div class="pfill ${col}" style="width:${Math.min(p*100,100).toFixed(1)}%"></div></div><div class="pnote">${(p*100).toFixed(0)}% — Falta ${fmt(Math.max(g.meta-g.actual,0))}</div></div>`;
+    return`<div class="pcard"><div class="ptop"><span class="pname">🎯 ${g.nombre}</span><div style="display:flex;gap:6px"><button class="badd" onclick="openDeposit('${g.id}','${g.nombre.replace(/'/g,"\\'")}')">+ Depositar</button><button class="idel" style="opacity:.6;font-size:1rem" onclick="editGoal('${g.id}')">✏️</button><button class="idel" style="opacity:.6;font-size:1rem" onclick="delGoal('${g.id}')">🗑️</button></div></div><div class="psub"><span>Ahorrado: ${fmt(g.actual)}</span><span>Meta: ${fmt(g.meta)}</span></div><div class="pbg"><div class="pfill ${col}" style="width:${Math.min(p*100,100).toFixed(1)}%"></div></div><div class="pnote">${(p*100).toFixed(0)}% — Falta ${fmt(Math.max(g.meta-g.actual,0))}</div></div>`;
   }).join(''):`<div class="empty"><div class="empty-i">🎯</div><div class="empty-t">Sin metas de ahorro.<br>Tocá "+ Agregar" para crear una.</div></div>`;
 }
 
@@ -685,6 +723,31 @@ window.editGoal=id=>{const g=st.objetivos.find(o=>o.id===id);if(!g)return;const 
 window.delGoal=id=>{if(!confirm('¿Eliminar esta meta?'))return;st.objetivos=st.objetivos.filter(o=>o.id!==id);save();renderObj();};
 window.editEmerg=()=>{const e=st.objetivos.find(o=>o.esEmerg);if(!e)return;const v=prompt('¿Cuánto tenés en el fondo de emergencia?',e.actual||'');if(v===null)return;const n=parseFloat(v.replace(/\./g,'').replace(',','.'));if(!isNaN(n)&&n>=0){e.actual=n;save();renderObj();}};
 
+// ── DEPOSITAR AHORRO
+const gd={goalId:'',amt:'',esEmerg:false,goalNombre:''};
+window.dnpk=n=>{if(gd.amt.length>=9)return;gd.amt+=n;document.getElementById('dep-amt-disp').textContent=fmt(parseInt(gd.amt));document.getElementById('err-dep-amt').classList.remove('on');};
+window.dnkd=()=>{gd.amt=gd.amt.slice(0,-1);document.getElementById('dep-amt-disp').textContent=fmt(parseInt(gd.amt||'0'));};
+window.openDeposit=(id,nombre,esEmerg=false)=>{
+  gd.goalId=id;gd.amt='';gd.esEmerg=esEmerg;gd.goalNombre=nombre;
+  document.getElementById('dep-ttl').textContent='➕ Depositar → '+nombre;
+  document.getElementById('dep-amt-disp').textContent='$ 0';
+  document.getElementById('dep-desc-inp').value='';
+  document.getElementById('err-dep-amt').classList.remove('on');
+  document.getElementById('ov-dep').classList.add('on');
+};
+window.saveDeposit=()=>{
+  const amt=parseInt(gd.amt||'0');
+  if(!amt){document.getElementById('err-dep-amt').classList.add('on');return;}
+  document.getElementById('ov-dep').classList.remove('on');
+  const goal=st.objetivos.find(o=>o.id===gd.goalId);
+  if(goal)goal.actual+=amt;
+  const hoy=new Date(),date=`${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+  const desc=document.getElementById('dep-desc-inp').value.trim()||gd.goalNombre;
+  st.gastos.push({id:uid(),date,type:'ahorro',cat:'ahorro',amt,desc,goalId:gd.goalId});
+  st.mes=hoy.getMonth();st.anio=hoy.getFullYear();
+  sl();render();saveCloud();
+};
+
 // ── SUELDO
 window.editSueldo=()=>{document.getElementById('sue-inp').value=st.sueldoEst[curK()]||'';document.getElementById('ov-sueldo').classList.add('on');};
 window.saveSueldo=()=>{const v=parseFloat(document.getElementById('sue-inp').value)||0;st.sueldoEst[curK()]=v;save();render();closeOv('ov-sueldo');};
@@ -713,7 +776,7 @@ window.vincular=()=>{
 ll();render();startSync();initCatDelegation();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/Economia---Personal/sw.js');
 // version tag — visible in console
-console.log('%c Economía v5 ', 'background:#6c63ff;color:#fff;border-radius:4px;padding:2px 8px');
+console.log('%c Economía v6 ', 'background:#6c63ff;color:#fff;border-radius:4px;padding:2px 8px');
 </script>
 </body>
 </html>
