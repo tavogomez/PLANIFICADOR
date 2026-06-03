@@ -181,6 +181,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
       <span class="sedit" onclick="editSueldo()">✏️ editar</span>
     </div>
     <div class="sval" id="sueldo-disp">$ 0</div>
+    <div id="sueldo-sub" style="display:none;font-size:.72rem;color:#aaa;margin-top:2px"></div>
   </div>
   <div class="card" id="bars-card"></div>
   <div class="card">
@@ -441,15 +442,19 @@ function render(){
 // RESUMEN
 function renderRes(){
   const k=curK(),fArr=st.fijos[k]||[],vars=st.gastos.filter(g=>g.date.startsWith(k));
-  const ing=vars.filter(g=>g.type==='i').reduce((a,g)=>a+g.amt,0);
   const sue=st.sueldoEst[k]||0;
-  const base=Math.max(sue,ing);
+  const extras=vars.filter(g=>g.type==='i'&&g.cat!=='sueldo').reduce((a,g)=>a+g.amt,0);
+  const ingSueldo=vars.filter(g=>g.type==='i'&&g.cat==='sueldo').reduce((a,g)=>a+g.amt,0);
+  const base=Math.max(sue,ingSueldo)+extras;
   const gFij=fArr.reduce((a,f)=>a+f.monto,0);
   const gVar=vars.filter(g=>g.type==='g').reduce((a,g)=>a+g.amt,0);
   const gTot=gFij+gVar;
   const depAhorro=vars.filter(g=>g.type==='ahorro').reduce((a,g)=>a+g.amt,0);
   const disponible=base-gTot-depAhorro;
   document.getElementById('sueldo-disp').textContent=fmt(base||sue);
+  // subtitle mostrando desglose si hay extras
+  const sueSub=document.getElementById('sueldo-sub');
+  if(sueSub){if(extras>0){sueSub.textContent=`Sueldo ${fmt(Math.max(sue,ingSueldo))} + Extras ${fmt(extras)}`;sueSub.style.display='block';}else{sueSub.style.display='none';}}
 
   const l70=base*.7,l20=base*.2,l10=base*.1;
   const pG=l70>0?gTot/l70:0;
@@ -586,8 +591,9 @@ function movHTML(g){
 // OBJETIVOS
 function renderObj(){
   const k=curK(),sue=st.sueldoEst[k]||0,vars=st.gastos.filter(g=>g.date.startsWith(k));
-  const ing=vars.filter(g=>g.type==='i').reduce((a,g)=>a+g.amt,0);
-  const base=Math.max(sue,ing),l10=base*.1;
+  const extras=vars.filter(g=>g.type==='i'&&g.cat!=='sueldo').reduce((a,g)=>a+g.amt,0);
+  const ingSueldo=vars.filter(g=>g.type==='i'&&g.cat==='sueldo').reduce((a,g)=>a+g.amt,0);
+  const base=Math.max(sue,ingSueldo)+extras,l10=base*.1;
   let emerg=st.objetivos.find(o=>o.esEmerg);
   if(!emerg){emerg={id:'emerg',nombre:'Fondo de emergencia',meta:0,actual:0,esEmerg:true};st.objetivos.push(emerg);}
   const pE=l10>0?emerg.actual/l10:0,cE=pE>=1?'fg':pE>=.5?'fy':'fr';
@@ -776,7 +782,7 @@ window.vincular=()=>{
 ll();render();startSync();initCatDelegation();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/Economia---Personal/sw.js');
 // version tag — visible in console
-console.log('%c Economía v6 ', 'background:#6c63ff;color:#fff;border-radius:4px;padding:2px 8px');
+console.log('%c Economía v7 ', 'background:#6c63ff;color:#fff;border-radius:4px;padding:2px 8px');
 </script>
 </body>
 </html>
