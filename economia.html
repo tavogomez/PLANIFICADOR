@@ -113,7 +113,10 @@ header{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;padding:
 /* OVERLAY / SHEET */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:none;align-items:flex-end;justify-content:center}
 .ov.on{display:flex}
-.sh{background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:480px;padding:18px 18px calc(18px + var(--sb));max-height:93dvh;overflow-y:auto;animation:sup .26s ease}
+.sh{background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:480px;padding:18px 18px calc(18px + var(--sb));max-height:93dvh;overflow-y:auto;animation:sup .26s ease;-webkit-overflow-scrolling:touch}
+/* INLINE ERR */
+.err-msg{font-size:.8rem;color:var(--r);text-align:center;padding:8px 12px;background:#fff5f5;border-radius:10px;margin-bottom:10px;display:none}
+.err-msg.on{display:block}
 @keyframes sup{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .hdl{width:38px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 16px}
 .shttl{font-size:1rem;font-weight:700;text-align:center;margin-bottom:14px}
@@ -229,7 +232,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 <div class="ov" id="ov-add" onclick="ovck(event,'ov-add')">
 <div class="sh">
   <div class="hdl"></div>
-  <div class="shttl">Nuevo movimiento</div>
+  <div class="shttl" id="add-ttl">Nuevo movimiento</div>
   <div class="tgl">
     <button class="tb on" id="tb-g" onclick="setTipo('g')">💸 Gasto</button>
     <button class="tb"    id="tb-i" onclick="setTipo('i')">💰 Ingreso</button>
@@ -243,17 +246,39 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     <input class="inp" id="d-persona" placeholder="Nombre de la persona">
   </div>
   <div class="adt g" id="adt">$ 0</div>
+  <div id="err-amt" class="err-msg">⚠️ Ingresá un monto primero</div>
   <div class="np">
-    <button class="nk" onclick="npk('1')">1</button><button class="nk" onclick="npk('2')">2</button><button class="nk" onclick="npk('3')">3</button>
-    <button class="nk" onclick="npk('4')">4</button><button class="nk" onclick="npk('5')">5</button><button class="nk" onclick="npk('6')">6</button>
-    <button class="nk" onclick="npk('7')">7</button><button class="nk" onclick="npk('8')">8</button><button class="nk" onclick="npk('9')">9</button>
-    <button class="nk w" onclick="npk('0')">0</button><button class="nk" onclick="nkd()">⌫</button>
+    <button class="nk" id="nk1">1</button><button class="nk" id="nk2">2</button><button class="nk" id="nk3">3</button>
+    <button class="nk" id="nk4">4</button><button class="nk" id="nk5">5</button><button class="nk" id="nk6">6</button>
+    <button class="nk" id="nk7">7</button><button class="nk" id="nk8">8</button><button class="nk" id="nk9">9</button>
+    <button class="nk w" id="nk0">0</button><button class="nk" id="nkd">⌫</button>
   </div>
   <div id="cats-box"></div>
-  <div id="cats-err" class="cats-err">⚠️ Seleccioná una categoría</div>
+  <div id="err-cat" class="err-msg">⚠️ Seleccioná una categoría</div>
   <input class="inp" id="desc-inp" placeholder="Descripción (opcional)">
-  <button class="bm" onclick="saveAdd()">Guardar</button>
+  <button class="bm" id="btn-guardar">Guardar</button>
   <button class="bs" onclick="closeOv('ov-add')">Cancelar</button>
+</div>
+</div>
+
+<!-- SHEET: EDITAR MOVIMIENTO -->
+<div class="ov" id="ov-edit" onclick="ovck(event,'ov-edit')">
+<div class="sh">
+  <div class="hdl"></div>
+  <div class="shttl">Editar movimiento</div>
+  <div id="edit-amt-disp" class="adt g">$ 0</div>
+  <div id="err-edit-amt" class="err-msg">⚠️ Ingresá un monto</div>
+  <div class="np" id="edit-np">
+    <button class="nk" id="enk1">1</button><button class="nk" id="enk2">2</button><button class="nk" id="enk3">3</button>
+    <button class="nk" id="enk4">4</button><button class="nk" id="enk5">5</button><button class="nk" id="enk6">6</button>
+    <button class="nk" id="enk7">7</button><button class="nk" id="enk8">8</button><button class="nk" id="enk9">9</button>
+    <button class="nk w" id="enk0">0</button><button class="nk" id="enkd">⌫</button>
+  </div>
+  <div id="edit-cats-box"></div>
+  <div id="err-edit-cat" class="err-msg">⚠️ Seleccioná una categoría</div>
+  <input class="inp" id="edit-desc-inp" placeholder="Descripción (opcional)">
+  <button class="bm" id="btn-edit-guardar">Guardar cambios</button>
+  <button class="bs" onclick="closeOv('ov-edit')">Cancelar</button>
 </div>
 </div>
 
@@ -463,9 +488,22 @@ function renderMov(){
     } else if(chip==='fijos'){html=`<div class="empty"><div class="empty-i">📌</div><div class="empty-t">Sin fijos este mes.<br>Copiá del mes anterior o agregá uno.</div></div>`;}
   }
   if(chip==='todos'||chip==='vars'){
-    const gv=vars.filter(g=>g.type==='g'||g.type==='i').sort((a,b)=>b.date.localeCompare(a.date));
-    if(gv.length){html+=`<div class="dhdr">📝 Variables</div>`;html+=gv.map(movHTML).join('');}
-    else if(chip==='vars'){html=`<div class="empty"><div class="empty-i">📝</div><div class="empty-t">Sin movimientos variables este mes.</div></div>`;}
+    const gv=vars.filter(g=>g.type==='g').sort((a,b)=>b.date.localeCompare(a.date));
+    const iv=vars.filter(g=>g.type==='i').sort((a,b)=>b.date.localeCompare(a.date));
+    if(gv.length){html+=`<div class="dhdr">📝 Gastos Variables</div>`;html+=gv.map(movHTML).join('');}
+    if(iv.length){
+      const totalIng=iv.reduce((a,g)=>a+g.amt,0);
+      html+=`<div class="dhdr">💰 Ingresos <span style="font-weight:800;color:var(--g);float:right">${fmt(totalIng)}</span></div>`;
+      // Group by category
+      const bycat={};iv.forEach(g=>{if(!bycat[g.cat])bycat[g.cat]=[];bycat[g.cat].push(g);});
+      Object.entries(bycat).forEach(([cat,items])=>{
+        const cInfo=CING.find(x=>x.id===cat)||{e:'💰',l:cat};
+        const subtotal=items.reduce((a,g)=>a+g.amt,0);
+        html+=`<div style="font-size:.74rem;font-weight:700;color:#aaa;padding:6px 0 3px;display:flex;justify-content:space-between"><span>${cInfo.e} ${cInfo.l}</span><span style="color:var(--g)">${fmt(subtotal)}</span></div>`;
+        html+=items.map(movHTML).join('');
+      });
+    }
+    if(!gv.length&&!iv.length&&chip==='vars'){html=`<div class="empty"><div class="empty-i">📝</div><div class="empty-t">Sin movimientos variables este mes.</div></div>`;}
   }
   if(chip==='todos'||chip==='deudas'){
     const dv=vars.filter(g=>g.type==='deben'||g.type==='debo');
@@ -497,7 +535,7 @@ function movHTML(g){
   if(g.type==='i'){cls='i';}
   if(g.type==='deben'){ico='👤';lbl=`Me debe${g.persona?' · '+g.persona:''}`;cls='d';}
   if(g.type==='debo'){ico='👤';lbl=`Le debo${g.persona?' · '+g.persona:''}`;cls='d';}
-  return`<div class="item"><div class="iico">${ico}</div><div class="iinfo"><div class="icat">${lbl}</div><div class="idesc">${g.desc||'—'}</div><div class="idate">${d}</div></div><div class="iright"><div class="iamt ${cls}">${g.type==='i'?'+':'-'}${fmt(g.amt)}</div><button class="idel" onclick="delG('${g.id}')">🗑️</button></div></div>`;
+  return`<div class="item"><div class="iico">${ico}</div><div class="iinfo"><div class="icat">${lbl}</div><div class="idesc">${g.desc||'—'}</div><div class="idate">${d}</div></div><div class="iright"><div class="iamt ${cls}">${g.type==='i'?'+':'-'}${fmt(g.amt)}</div><div style="display:flex;gap:4px"><button class="idel" onclick="editG('${g.id}')">✏️</button><button class="idel" onclick="delG('${g.id}')">🗑️</button></div></div></div>`;
 }
 
 // OBJETIVOS
@@ -537,32 +575,124 @@ window.copyFijos=()=>{
 
 // ── MOVIMIENTOS
 const gs={tipo:'g',amt:'',cat:'',ddir:'deben'};
-window.openAdd=()=>{gs.tipo='g';gs.amt='';gs.cat='';gs.ddir='deben';document.getElementById('adt').className='adt g';document.getElementById('adt').textContent='$ 0';document.getElementById('desc-inp').value='';document.getElementById('d-persona').value='';document.getElementById('deuda-dir').style.display='none';['g','i','d'].forEach(x=>document.getElementById('tb-'+x).classList.toggle('on',x==='g'));buildCats();document.getElementById('ov-add').classList.add('on');};
-window.setTipo=t=>{gs.tipo=t;gs.cat='';['g','i','d'].forEach(x=>document.getElementById('tb-'+x).classList.toggle('on',x===t));document.getElementById('adt').className='adt '+t;document.getElementById('deuda-dir').style.display=t==='d'?'block':'none';buildCats();};
+
+// Numpad — add listener (no inline onclick)
+function initNumpad(){
+  const npMap=[['nk1','1'],['nk2','2'],['nk3','3'],['nk4','4'],['nk5','5'],['nk6','6'],['nk7','7'],['nk8','8'],['nk9','9'],['nk0','0'],['nkd','del']];
+  npMap.forEach(([id,v])=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.addEventListener('click',()=>{
+      if(v==='del'){gs.amt=gs.amt.slice(0,-1);}
+      else{if(gs.amt.length>=9)return;gs.amt+=v;}
+      document.getElementById('adt').textContent=fmt(parseInt(gs.amt||'0'));
+      document.getElementById('err-amt').classList.remove('on');
+    });
+  });
+  // Edit numpad
+  const enpMap=[['enk1','1'],['enk2','2'],['enk3','3'],['enk4','4'],['enk5','5'],['enk6','6'],['enk7','7'],['enk8','8'],['enk9','9'],['enk0','0'],['enkd','del']];
+  enpMap.forEach(([id,v])=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.addEventListener('click',()=>{
+      if(v==='del'){ge.amt=ge.amt.slice(0,-1);}
+      else{if(ge.amt.length>=9)return;ge.amt+=v;}
+      document.getElementById('edit-amt-disp').textContent=fmt(parseInt(ge.amt||'0'));
+      document.getElementById('err-edit-amt').classList.remove('on');
+    });
+  });
+  // Category selection (event delegation)
+  document.getElementById('cats-box').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-cat]');
+    if(!btn)return;
+    gs.cat=btn.dataset.cat;
+    buildCats();
+    document.getElementById('err-cat').classList.remove('on');
+  });
+  document.getElementById('edit-cats-box').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-cat]');
+    if(!btn)return;
+    ge.cat=btn.dataset.cat;
+    buildEditCats();
+    document.getElementById('err-edit-cat').classList.remove('on');
+  });
+  // Guardar buttons
+  document.getElementById('btn-guardar').addEventListener('click',saveAdd);
+  document.getElementById('btn-edit-guardar').addEventListener('click',saveEdit);
+}
+
+window.openAdd=()=>{
+  gs.tipo='g';gs.amt='';gs.cat='';gs.ddir='deben';
+  document.getElementById('adt').className='adt g';
+  document.getElementById('adt').textContent='$ 0';
+  document.getElementById('add-ttl').textContent='Nuevo movimiento';
+  document.getElementById('desc-inp').value='';
+  document.getElementById('d-persona').value='';
+  document.getElementById('deuda-dir').style.display='none';
+  document.getElementById('err-amt').classList.remove('on');
+  document.getElementById('err-cat').classList.remove('on');
+  ['g','i','d'].forEach(x=>document.getElementById('tb-'+x).classList.toggle('on',x==='g'));
+  buildCats();
+  document.getElementById('ov-add').classList.add('on');
+};
+window.setTipo=t=>{
+  gs.tipo=t;gs.cat='';
+  ['g','i','d'].forEach(x=>document.getElementById('tb-'+x).classList.toggle('on',x===t));
+  document.getElementById('adt').className='adt '+t;
+  document.getElementById('deuda-dir').style.display=t==='d'?'block':'none';
+  document.getElementById('err-cat').classList.remove('on');
+  buildCats();
+};
 window.setDDir=d=>{gs.ddir=d;document.getElementById('dd-me').classList.toggle('on',d==='deben');document.getElementById('dd-le').classList.toggle('on',d==='debo');};
-function buildCats(){if(gs.tipo==='d'){document.getElementById('cats-box').innerHTML='';return;}const cats=gs.tipo==='g'?CGAS:CING;document.getElementById('cats-box').innerHTML=`<div class="catg">${cats.map(c=>`<button class="cb${gs.cat===c.id?' on':''}" onclick="pickCat('${c.id}')"><span class="ce">${c.e}</span><span class="cl">${c.l}</span></button>`).join('')}</div>`;}
-window.pickCat=id=>{gs.cat=id;buildCats();document.getElementById('cats-err').classList.remove('on');};
-window.npk=n=>{if(gs.amt.length>=9)return;gs.amt+=n;document.getElementById('adt').textContent=fmt(parseInt(gs.amt));};
-window.nkd=()=>{gs.amt=gs.amt.slice(0,-1);document.getElementById('adt').textContent=fmt(parseInt(gs.amt||'0'));};
-let _toastT;
-window.toast=msg=>{const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');clearTimeout(_toastT);_toastT=setTimeout(()=>t.classList.remove('on'),2500);};
-window.saveAdd=()=>{
+
+function buildCats(){
+  if(gs.tipo==='d'){document.getElementById('cats-box').innerHTML='';return;}
+  const cats=gs.tipo==='g'?CGAS:CING;
+  document.getElementById('cats-box').innerHTML=`<div class="catg">${cats.map(c=>`<button class="cb${gs.cat===c.id?' on':''}" data-cat="${c.id}"><span class="ce">${c.e}</span><span class="cl">${c.l}</span></button>`).join('')}</div>`;
+}
+
+function saveAdd(){
   const amt=parseInt(gs.amt||'0');
-  if(!amt){toast('⚠️ Ingresá un monto primero');return;}
-  if(gs.tipo!=='d'&&!gs.cat){
-    const err=document.getElementById('cats-err');
-    const catg=document.querySelector('.catg');
-    err.classList.add('on');
-    if(catg){catg.classList.remove('shake');void catg.offsetWidth;catg.classList.add('shake');}
-    toast('⚠️ Seleccioná una categoría');
-    return;
-  }
-  document.getElementById('cats-err').classList.remove('on');
+  if(!amt){document.getElementById('err-amt').classList.add('on');return;}
+  if(gs.tipo!=='d'&&!gs.cat){document.getElementById('err-cat').classList.add('on');return;}
+  document.getElementById('err-amt').classList.remove('on');
+  document.getElementById('err-cat').classList.remove('on');
   const hoy=new Date(),date=`${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
   const type=gs.tipo==='d'?gs.ddir:gs.tipo;
   st.gastos.push({id:uid(),date,type,cat:gs.cat,amt,desc:document.getElementById('desc-inp').value.trim(),persona:gs.tipo==='d'?document.getElementById('d-persona').value.trim():undefined});
   save();st.mes=hoy.getMonth();st.anio=hoy.getFullYear();closeOv('ov-add');render();
+}
+
+// ── EDITAR MOVIMIENTO VARIABLE
+const ge={id:'',amt:'',cat:'',type:'g'};
+function buildEditCats(){
+  const cats=ge.type==='i'?CING:CGAS;
+  document.getElementById('edit-cats-box').innerHTML=`<div class="catg">${cats.map(c=>`<button class="cb${ge.cat===c.id?' on':''}" data-cat="${c.id}"><span class="ce">${c.e}</span><span class="cl">${c.l}</span></button>`).join('')}</div>`;
+}
+window.editG=id=>{
+  const g=st.gastos.find(x=>x.id===id);
+  if(!g)return;
+  ge.id=g.id;ge.amt=String(g.amt);ge.cat=g.cat||'';ge.type=g.type;
+  document.getElementById('edit-amt-disp').textContent=fmt(g.amt);
+  document.getElementById('edit-amt-disp').className='adt '+(g.type==='i'?'i':g.type==='deben'||g.type==='debo'?'d':'g');
+  document.getElementById('edit-desc-inp').value=g.desc||'';
+  document.getElementById('err-edit-amt').classList.remove('on');
+  document.getElementById('err-edit-cat').classList.remove('on');
+  if(g.type==='deben'||g.type==='debo'){document.getElementById('edit-cats-box').innerHTML='';}
+  else{buildEditCats();}
+  document.getElementById('ov-edit').classList.add('on');
 };
+function saveEdit(){
+  const amt=parseInt(ge.amt||'0');
+  if(!amt){document.getElementById('err-edit-amt').classList.add('on');return;}
+  const g=st.gastos.find(x=>x.id===ge.id);
+  if(!g)return;
+  if(g.type!=='deben'&&g.type!=='debo'&&!ge.cat){document.getElementById('err-edit-cat').classList.add('on');return;}
+  g.amt=amt;
+  if(ge.cat)g.cat=ge.cat;
+  g.desc=document.getElementById('edit-desc-inp').value.trim();
+  save();closeOv('ov-edit');render();
+}
 window.delG=id=>{if(!confirm('¿Eliminar?'))return;st.gastos=st.gastos.filter(g=>g.id!==id);save();render();};
 
 // ── OBJETIVOS
@@ -597,7 +727,7 @@ window.vincular=()=>{
   window.location.reload();
 };
 
-ll();render();startSync();
+ll();render();startSync();initNumpad();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/Economia---Personal/sw.js');
 </script>
 </body>
