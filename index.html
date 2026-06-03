@@ -287,6 +287,73 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .skip-cancel-btn{width:100%;margin-top:6px;padding:8px;border:none;border-radius:8px;cursor:pointer;font-size:.82rem;background:#f0f2f5;color:#888}
 .stat-box.pending-box{background:#f3f4f6}
 .stat-box.pending-box .stat-num{color:#6b7280}
+
+/* ── GASTOS ──────────────────────────────── */
+.gastos-wrap{max-width:600px;margin:0 auto;padding-bottom:100px}
+.gs-balance-card{background:linear-gradient(135deg,#6c63ff,#574fd6);color:white;border-radius:18px;padding:22px 24px;margin-bottom:14px;box-shadow:0 4px 20px rgba(108,99,255,.35)}
+.gs-balance-label{font-size:.72rem;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.gs-balance-amount{font-size:2.2rem;font-weight:800;line-height:1.1}
+.gs-balance-amount.neg{color:#fca5a5}
+.gs-row{display:flex;gap:10px;margin-top:14px}
+.gs-mini{flex:1;background:rgba(255,255,255,.15);border-radius:12px;padding:12px;text-align:center}
+.gs-mini-label{font-size:.65rem;opacity:.8;margin-bottom:3px}
+.gs-mini-amount{font-size:1.05rem;font-weight:700}
+.gs-section-title{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af;margin:18px 0 8px}
+.gs-goteo-card{background:#fff8f0;border:1.5px solid #fed7aa;border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.gs-goteo-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.gs-goteo-title{font-size:.82rem;font-weight:700;color:#c2410c}
+.gs-goteo-amount{font-size:1.05rem;font-weight:800;color:#c2410c}
+.gs-goteo-sub{font-size:.72rem;color:#9a3412}
+.gs-cat-bar{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f3f4f6}
+.gs-cat-bar:last-child{border-bottom:none}
+.gs-cat-emoji{font-size:1.2rem;flex-shrink:0;width:26px;text-align:center}
+.gs-cat-info{flex:1;min-width:0}
+.gs-cat-name{font-size:.77rem;font-weight:600;color:#374151;margin-bottom:3px}
+.gs-cat-track{background:#f0f2f5;border-radius:3px;height:5px;overflow:hidden}
+.gs-cat-fill{height:100%;border-radius:3px;background:#6c63ff;transition:width .4s}
+.gs-cat-fill.chico{background:#f97316}
+.gs-cat-amount{font-size:.82rem;font-weight:700;color:#374151;flex-shrink:0;min-width:68px;text-align:right}
+.gs-tx-day{font-size:.7rem;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.3px;padding:12px 0 5px}
+.gs-tx-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:white;border-radius:10px;margin-bottom:6px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.gs-tx-emoji{font-size:1.25rem;flex-shrink:0}
+.gs-tx-body{flex:1;min-width:0}
+.gs-tx-desc{font-size:.85rem;font-weight:500;color:#222}
+.gs-tx-cat{font-size:.67rem;color:#9ca3af;margin-top:1px}
+.gs-tx-amount{font-size:.95rem;font-weight:700;flex-shrink:0}
+.gs-tx-amount.gasto{color:#ef4444}
+.gs-tx-amount.ingreso{color:#22c55e}
+.gs-tx-del{background:none;border:none;color:#e5e7eb;font-size:1.1rem;cursor:pointer;padding:4px;line-height:1;flex-shrink:0;transition:color .15s}
+.gs-tx-del:hover{color:#ef4444}
+.gs-fab{position:fixed;bottom:28px;right:24px;width:58px;height:58px;border-radius:50%;background:#6c63ff;color:white;border:none;font-size:1.7rem;cursor:pointer;box-shadow:0 4px 20px rgba(108,99,255,.5);display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s;z-index:100}
+.gs-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(108,99,255,.6)}
+.gs-fab:active{transform:scale(.93)}
+
+/* ── ENTRADA RÁPIDA ──────────────────────── */
+.ge-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:1000}
+.ge-sheet{background:white;border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:18px 20px 40px;box-shadow:0 -8px 40px rgba(0,0,0,.2);animation:slideUp .22s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.ge-handle{width:38px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 16px}
+.ge-type-toggle{display:flex;background:#f3f4f6;border-radius:10px;padding:3px;margin-bottom:12px}
+.ge-type-btn{flex:1;padding:9px;border:none;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:600;background:none;color:#888;transition:all .18s}
+.ge-type-btn.active-gasto{background:#ef4444;color:white}
+.ge-type-btn.active-ingreso{background:#22c55e;color:white}
+.ge-display{text-align:center;font-size:2.6rem;font-weight:800;color:#ccc;padding:8px 0 4px;min-height:58px;letter-spacing:.5px}
+.ge-display.has-val{color:#1a1a2e}
+.ge-cats{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin:8px 0 12px;padding:10px;background:#f9fafb;border-radius:12px;max-height:130px;overflow-y:auto}
+.ge-cat-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 8px;border:2px solid transparent;border-radius:10px;background:white;cursor:pointer;transition:all .15s;min-width:54px}
+.ge-cat-btn .ge-em{font-size:1.3rem}
+.ge-cat-btn .ge-lb{font-size:.55rem;color:#888;text-align:center;line-height:1.2}
+.ge-cat-btn.active{border-color:#6c63ff;background:#f0eeff}
+.ge-cat-btn.active .ge-lb{color:#6c63ff;font-weight:600}
+.ge-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px}
+.ge-key{padding:15px;border:none;border-radius:10px;background:#f3f4f6;font-size:1.1rem;font-weight:600;color:#1a1a2e;cursor:pointer;transition:background .1s;user-select:none}
+.ge-key:active{background:#d1d5db}
+.ge-key.del{color:#ef4444}
+.ge-desc{width:100%;padding:10px 13px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.9rem;font-family:inherit;outline:none;margin-bottom:10px}
+.ge-desc:focus{border-color:#6c63ff}
+.ge-save{width:100%;padding:15px;background:#6c63ff;color:white;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;transition:background .15s}
+.ge-save:hover{background:#574fd6}
+.ge-cancel{width:100%;padding:9px;background:none;border:none;color:#9ca3af;font-size:.85rem;cursor:pointer;margin-top:3px}
 </style>
 </head>
 <body>
@@ -300,6 +367,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <button class="tab" data-view="day"        onclick="setView('day')">D&iacute;a</button>
         <button class="tab" data-view="objectives" onclick="setView('objectives')">Objetivos</button>
         <button class="tab" data-view="evaluation" onclick="setView('evaluation')">Evaluaci&oacute;n</button>
+        <button class="tab" data-view="gastos"     onclick="setView('gastos')">&#128176; Gastos</button>
       </div>
       <div class="sync-wrap" onclick="showIdModal()">
         <div class="sync-dot" id="sync-dot"></div>
@@ -414,6 +482,36 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
 </div>
 
+<!-- GASTOS — ENTRADA RÁPIDA -->
+<div id="ge-overlay" class="ge-overlay" style="display:none" onclick="if(event.target===this)closeGE()">
+  <div class="ge-sheet">
+    <div class="ge-handle"></div>
+    <div class="ge-type-toggle">
+      <button class="ge-type-btn active-gasto" id="ge-btn-gasto"   onclick="gsSetType('gasto')">&#8595; Gasto</button>
+      <button class="ge-type-btn"              id="ge-btn-ingreso" onclick="gsSetType('ingreso')">&#8593; Ingreso</button>
+    </div>
+    <div class="ge-display" id="ge-display">0</div>
+    <div class="ge-cats" id="ge-cats"></div>
+    <div class="ge-pad">
+      <button class="ge-key" onclick="gsPad('7')">7</button>
+      <button class="ge-key" onclick="gsPad('8')">8</button>
+      <button class="ge-key" onclick="gsPad('9')">9</button>
+      <button class="ge-key" onclick="gsPad('4')">4</button>
+      <button class="ge-key" onclick="gsPad('5')">5</button>
+      <button class="ge-key" onclick="gsPad('6')">6</button>
+      <button class="ge-key" onclick="gsPad('1')">1</button>
+      <button class="ge-key" onclick="gsPad('2')">2</button>
+      <button class="ge-key" onclick="gsPad('3')">3</button>
+      <button class="ge-key" onclick="gsPad('.')">.</button>
+      <button class="ge-key" onclick="gsPad('0')">0</button>
+      <button class="ge-key del" onclick="gsPad('&#9003;')">&#9003;</button>
+    </div>
+    <input type="text" class="ge-desc" id="ge-desc" placeholder="Descripci&oacute;n (opcional)...">
+    <button class="ge-save" onclick="saveGE()">Guardar</button>
+    <button class="ge-cancel" onclick="closeGE()">Cancelar</button>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
@@ -453,7 +551,8 @@ let st = {
   data: {},
   objectives: {},
   evaluations: {},
-  evalPeriod: 'day'
+  evalPeriod: 'day',
+  gastos: []
 };
 
 // Estado del modal (gestionado sin re-render)
@@ -494,18 +593,18 @@ function setSync(s) {
 //  PERSISTENCIA
 // ═══════════════════════════════════════════
 function saveLocal() {
-  localStorage.setItem('planificador_v2', JSON.stringify({ data:st.data, objectives:st.objectives, evaluations:st.evaluations }));
+  localStorage.setItem('planificador_v2', JSON.stringify({ data:st.data, objectives:st.objectives, evaluations:st.evaluations, gastos:st.gastos||[] }));
 }
 function loadLocal() {
   try {
     const r = JSON.parse(localStorage.getItem('planificador_v2') || localStorage.getItem('planificador_v1') || '{}');
-    st.data = r.data||{}; st.objectives = r.objectives||{}; st.evaluations = r.evaluations||{};
-  } catch { st.data={}; st.objectives={}; st.evaluations={}; }
+    st.data = r.data||{}; st.objectives = r.objectives||{}; st.evaluations = r.evaluations||{}; st.gastos = r.gastos||[];
+  } catch { st.data={}; st.objectives={}; st.evaluations={}; st.gastos=[]; }
 }
 function saveFirestore() {
   if (!db) return;
   setSync('guardando');
-  db.collection('planificadores').doc(userId).set({ data:st.data, objectives:st.objectives, evaluations:st.evaluations })
+  db.collection('planificadores').doc(userId).set({ data:st.data, objectives:st.objectives, evaluations:st.evaluations, gastos:st.gastos||[] })
     .then(()=>setSync('sincronizado')).catch(()=>setSync('error'));
 }
 function loadFirestore(cb) {
@@ -513,7 +612,7 @@ function loadFirestore(cb) {
   setSync('guardando');
   db.collection('planificadores').doc(userId).get()
     .then(snap => {
-      if (snap.exists) { const d=snap.data(); st.data=d.data||{}; st.objectives=d.objectives||{}; st.evaluations=d.evaluations||{}; saveLocal(); }
+      if (snap.exists) { const d=snap.data(); st.data=d.data||{}; st.objectives=d.objectives||{}; st.evaluations=d.evaluations||{}; st.gastos=d.gastos||[]; saveLocal(); }
       setSync('sincronizado'); cb&&cb();
     }).catch(()=>{ setSync('error'); cb&&cb(); });
 }
@@ -638,7 +737,7 @@ function evalStats() {
 //  NAVEGACIÓN
 // ═══════════════════════════════════════════
 function nav(dir) {
-  if (['month','objectives','evaluation'].includes(st.view)) {
+  if (['month','objectives','evaluation','gastos'].includes(st.view)) {
     st.date = new Date(st.date.getFullYear(),st.date.getMonth()+dir,1);
   } else if (st.view==='week') {
     st.date = addDays(st.date,dir*7);
@@ -674,6 +773,9 @@ function render() {
   } else if (st.view==='evaluation') {
     title=`Evaluación – ${MESES[st.date.getMonth()]} ${st.date.getFullYear()}`;
     html=renderEvaluation();
+  } else if (st.view==='gastos') {
+    title=`Gastos – ${MESES[st.date.getMonth()]} ${st.date.getFullYear()}`;
+    html=renderGastos();
   }
   document.getElementById('nav-title').textContent=title;
   document.getElementById('main').innerHTML=html;
@@ -1074,7 +1176,7 @@ function applyNewId() {
   const id=document.getElementById('new-id-input')?.value?.trim();
   if (!id) return;
   userId=id; localStorage.setItem('plan_uid',userId);
-  closeIdModal(); st.data={}; st.objectives={}; st.evaluations={};
+  closeIdModal(); st.data={}; st.objectives={}; st.evaluations={}; st.gastos=[];
   loadFirestore(()=>render());
 }
 
@@ -1149,6 +1251,228 @@ function doAssignDay(ym, objId, stageId, dayKey) {
   document.getElementById('assign-popup-overlay')?.remove();
   assignDayToStage(fromKey(ym+'-01'),objId,stageId,dayKey,timeStart);
   render();
+}
+
+// ═══════════════════════════════════════════
+//  GASTOS — CONSTANTES
+// ═══════════════════════════════════════════
+const GASTO_CATS = {
+  cafe:       { emoji:'☕', label:'Café / Kiosco',      tipo:'gasto',   nivel:'chico'    },
+  transport:  { emoji:'🚌', label:'Transporte',          tipo:'gasto',   nivel:'chico'    },
+  comida:     { emoji:'🍔', label:'Comida / Delivery',   tipo:'gasto',   nivel:'variable' },
+  super_:     { emoji:'🛒', label:'Supermercado',        tipo:'gasto',   nivel:'variable' },
+  servicios:  { emoji:'💡', label:'Servicios',           tipo:'gasto',   nivel:'fijo'     },
+  salud:      { emoji:'🏥', label:'Salud',               tipo:'gasto',   nivel:'variable' },
+  ropa:       { emoji:'👕', label:'Ropa',                tipo:'gasto',   nivel:'variable' },
+  entrete:    { emoji:'🎬', label:'Entretenimiento',     tipo:'gasto',   nivel:'variable' },
+  grande:     { emoji:'💸', label:'Gasto grande',        tipo:'gasto',   nivel:'grande'   },
+  otro:       { emoji:'📦', label:'Otro gasto',          tipo:'gasto',   nivel:'variable' },
+  sueldo:     { emoji:'💰', label:'Sueldo',              tipo:'ingreso', nivel:null       },
+  freelance:  { emoji:'💻', label:'Freelance / Extra',   tipo:'ingreso', nivel:null       },
+  ingreso_ot: { emoji:'📈', label:'Otro ingreso',        tipo:'ingreso', nivel:null       }
+};
+const GASTO_CAT_KEYS   = Object.keys(GASTO_CATS).filter(k=>GASTO_CATS[k].tipo==='gasto');
+const INGRESO_CAT_KEYS = Object.keys(GASTO_CATS).filter(k=>GASTO_CATS[k].tipo==='ingreso');
+
+// ═══════════════════════════════════════════
+//  GASTOS — CRUD
+// ═══════════════════════════════════════════
+function getGastosMonth(ym) {
+  return (st.gastos||[]).filter(t=>t.date.startsWith(ym));
+}
+function addGasto(tx) {
+  if (!st.gastos) st.gastos=[];
+  st.gastos.push({id:uid(), createdAt:Date.now(), ...tx});
+  save();
+}
+function delGasto(id) {
+  st.gastos=(st.gastos||[]).filter(t=>t.id!==id);
+  save();
+}
+function delGastoConfirm(id) {
+  const tx=(st.gastos||[]).find(t=>t.id===id);
+  if(!tx) return;
+  const cat=GASTO_CATS[tx.category]||{emoji:'📦',label:tx.category};
+  const signo=tx.type==='ingreso'?'+':'-';
+  if(confirm(`¿Eliminar este movimiento?\n${cat.emoji} ${tx.description||cat.label}  ${signo}${fmtARS(tx.amount)}`)){
+    delGasto(id); render();
+  }
+}
+
+// ═══════════════════════════════════════════
+//  GASTOS — FORMATO
+// ═══════════════════════════════════════════
+function fmtARS(n) {
+  return '$ '+(Math.abs(n)||0).toLocaleString('es-AR',{minimumFractionDigits:0,maximumFractionDigits:2});
+}
+
+// ═══════════════════════════════════════════
+//  GASTOS — RENDER
+// ═══════════════════════════════════════════
+function renderGastos() {
+  const ym = ymk(st.date);
+  const txs = getGastosMonth(ym);
+
+  const totalIngresos = txs.filter(t=>t.type==='ingreso').reduce((s,t)=>s+t.amount,0);
+  const totalGastos   = txs.filter(t=>t.type==='gasto').reduce((s,t)=>s+t.amount,0);
+  const balance       = totalIngresos - totalGastos;
+
+  // Balance card
+  const balHtml=`<div class="gs-balance-card">
+    <div class="gs-balance-label">Balance del mes</div>
+    <div class="gs-balance-amount${balance<0?' neg':''}">${balance>=0?'+':'−'} ${fmtARS(balance)}</div>
+    <div class="gs-row">
+      <div class="gs-mini"><div class="gs-mini-label">&#8593; Ingresos</div><div class="gs-mini-amount">+${fmtARS(totalIngresos)}</div></div>
+      <div class="gs-mini"><div class="gs-mini-label">&#8595; Gastos</div><div class="gs-mini-amount">−${fmtARS(totalGastos)}</div></div>
+    </div>
+  </div>`;
+
+  // Efecto goteo (gastos chicos)
+  const chicos     = txs.filter(t=>t.type==='gasto'&&GASTO_CATS[t.category]?.nivel==='chico');
+  const chicosTotal = chicos.reduce((s,t)=>s+t.amount,0);
+  const pct = totalGastos>0?Math.round(chicosTotal/totalGastos*100):0;
+  const goteoHtml = chicosTotal>0 ? `<div class="gs-goteo-card">
+    <div class="gs-goteo-head">
+      <span class="gs-goteo-title">&#9749; Gastos chicos (efecto goteo)</span>
+      <span class="gs-goteo-amount">−${fmtARS(chicosTotal)}</span>
+    </div>
+    <div class="gs-goteo-sub">${chicos.length} transacciones &middot; ${pct}&nbsp;% del total</div>
+  </div>` : '';
+
+  // Categorías
+  const catTotals={};
+  txs.filter(t=>t.type==='gasto').forEach(t=>{ catTotals[t.category]=(catTotals[t.category]||0)+t.amount; });
+  const maxCat=Math.max(1,...Object.values(catTotals));
+  const catRows=Object.entries(catTotals).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v])=>{
+    const cat=GASTO_CATS[k]||{emoji:'📦',label:k,nivel:'variable'};
+    const w=Math.round(v/maxCat*100);
+    return `<div class="gs-cat-bar">
+      <div class="gs-cat-emoji">${cat.emoji}</div>
+      <div class="gs-cat-info">
+        <div class="gs-cat-name">${cat.label}</div>
+        <div class="gs-cat-track"><div class="gs-cat-fill${cat.nivel==='chico'?' chico':''}" style="width:${w}%"></div></div>
+      </div>
+      <div class="gs-cat-amount">−${fmtARS(v)}</div>
+    </div>`;
+  }).join('');
+  const catsHtml=catRows ? `<div class="gs-section-title">Por categor&iacute;a</div>
+    <div style="background:white;border-radius:14px;padding:10px 16px;box-shadow:0 2px 10px rgba(0,0,0,.05)">${catRows}</div>` : '';
+
+  // Transacciones agrupadas por día
+  const byDay={};
+  [...txs].sort((a,b)=>b.date.localeCompare(a.date)||(b.createdAt-a.createdAt))
+    .forEach(t=>{ if(!byDay[t.date]) byDay[t.date]=[]; byDay[t.date].push(t); });
+  let txHtml='';
+  if(Object.keys(byDay).length===0) {
+    txHtml=`<div class="empty"><div class="empty-icon">&#128176;</div><div class="empty-text">No hay movimientos este mes.<br>Toc&aacute; + para agregar el primero.</div></div>`;
+  } else {
+    Object.entries(byDay).forEach(([date,list])=>{
+      const d=fromKey(date);
+      const isT=dk(new Date())===date;
+      const label=isT?'Hoy':`${DIA_CORTO[diIdx(d)]} ${d.getDate()}`;
+      txHtml+=`<div class="gs-tx-day">${label} <span style="font-weight:400;text-transform:none">${MESES[d.getMonth()].slice(0,3)}</span></div>`;
+      list.forEach(t=>{
+        const cat=GASTO_CATS[t.category]||{emoji:'📦',label:t.category};
+        const signo=t.type==='ingreso'?'+':'−';
+        const cls=t.type==='ingreso'?'ingreso':'gasto';
+        const desc=t.description||cat.label;
+        txHtml+=`<div class="gs-tx-item">
+          <div class="gs-tx-emoji">${cat.emoji}</div>
+          <div class="gs-tx-body">
+            <div class="gs-tx-desc">${esc(desc)}</div>
+            <div class="gs-tx-cat">${cat.label}</div>
+          </div>
+          <div class="gs-tx-amount ${cls}">${signo}${fmtARS(t.amount)}</div>
+          <button class="gs-tx-del" onclick="delGastoConfirm('${t.id}')" title="Eliminar">&#10005;</button>
+        </div>`;
+      });
+    });
+  }
+  const txSection=`<div class="gs-section-title">Movimientos</div>${txHtml}`;
+
+  return `<div class="container"><div class="gastos-wrap">
+    ${balHtml}${goteoHtml}${catsHtml}${txSection}
+    <button class="gs-fab" onclick="openGE()">+</button>
+  </div></div>`;
+}
+
+// ═══════════════════════════════════════════
+//  GASTOS — MODAL ESTADO
+// ═══════════════════════════════════════════
+let gs = { type:'gasto', amount:'', category:'cafe', description:'', editId:null };
+
+function openGE(editId) {
+  gs.editId = editId||null;
+  if (editId) {
+    const tx=(st.gastos||[]).find(t=>t.id===editId);
+    if (tx) { gs.type=tx.type; gs.amount=String(tx.amount); gs.category=tx.category; gs.description=tx.description||''; }
+  } else {
+    gs.type='gasto'; gs.amount=''; gs.category='cafe'; gs.description='';
+  }
+  gsUpdateUI();
+  document.getElementById('ge-overlay').style.display='flex';
+  document.getElementById('ge-desc').value=gs.description;
+}
+function closeGE() { document.getElementById('ge-overlay').style.display='none'; }
+
+function gsSetType(t) {
+  gs.type=t;
+  gs.category=t==='gasto'?'cafe':'sueldo';
+  gsUpdateUI();
+}
+function gsSetCat(k) {
+  gs.category=k;
+  document.querySelectorAll('.ge-cat-btn').forEach(b=>b.classList.toggle('active',b.dataset.cat===k));
+}
+function gsPad(k) {
+  if(k==='⌫'||k==='⌫'){ gs.amount=gs.amount.slice(0,-1); }
+  else if(k==='.'){
+    if(!gs.amount.includes('.')) gs.amount+=(gs.amount===''?'0.':'.');
+  } else {
+    const parts=gs.amount.split('.');
+    if(parts.length===1&&parts[0].replace(/^0+/,'').length<8) {
+      if(gs.amount==='0') gs.amount=k; else gs.amount+=k;
+    } else if(parts.length===2&&parts[1].length<2) {
+      gs.amount+=k;
+    }
+  }
+  const disp=document.getElementById('ge-display');
+  if(disp){ disp.textContent=gs.amount||'0'; disp.className='ge-display'+(gs.amount?' has-val':''); }
+}
+function gsUpdateUI() {
+  const isGasto=gs.type==='gasto';
+  const gb=document.getElementById('ge-btn-gasto'), ib=document.getElementById('ge-btn-ingreso');
+  if(gb) gb.className='ge-type-btn'+(isGasto?' active-gasto':'');
+  if(ib) ib.className='ge-type-btn'+(!isGasto?' active-ingreso':'');
+  const disp=document.getElementById('ge-display');
+  if(disp){ disp.textContent=gs.amount||'0'; disp.className='ge-display'+(gs.amount?' has-val':''); }
+  const cats=isGasto?GASTO_CAT_KEYS:INGRESO_CAT_KEYS;
+  const container=document.getElementById('ge-cats');
+  if(container) container.innerHTML=cats.map(k=>{
+    const c=GASTO_CATS[k];
+    return `<button class="ge-cat-btn ${gs.category===k?'active':''}" data-cat="${k}" onclick="gsSetCat('${k}')">
+      <span class="ge-em">${c.emoji}</span>
+      <span class="ge-lb">${c.label}</span>
+    </button>`;
+  }).join('');
+}
+function saveGE() {
+  const amt=parseFloat(gs.amount);
+  if(!amt||amt<=0){
+    const d=document.getElementById('ge-display');
+    if(d){ const orig=d.className; d.style.color='#ef4444'; setTimeout(()=>{ d.style.color=''; },500); }
+    return;
+  }
+  const desc=document.getElementById('ge-desc')?.value?.trim()||'';
+  if(gs.editId) {
+    const idx=(st.gastos||[]).findIndex(t=>t.id===gs.editId);
+    if(idx>=0) st.gastos[idx]={...st.gastos[idx], type:gs.type, amount:amt, category:gs.category, description:desc};
+    save();
+  } else {
+    addGasto({ type:gs.type, amount:amt, category:gs.category, description:desc, date:dk(new Date()) });
+  }
+  closeGE();
+  if(st.view==='gastos') render();
 }
 
 // ═══════════════════════════════════════════
