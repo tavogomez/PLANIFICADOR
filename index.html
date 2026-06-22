@@ -416,6 +416,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
 // ═══════════════════════════════════════════
 //  FIREBASE CONFIG
@@ -475,8 +476,15 @@ if (!userId) {
   userId = [Math.random().toString(36).slice(2,8), Math.random().toString(36).slice(2,8), Math.random().toString(36).slice(2,8)].join('-');
   localStorage.setItem('plan_uid', userId);
 }
+let authReady = Promise.resolve();
 if (firebaseActivo) {
-  try { firebase.initializeApp(FIREBASE_CONFIG); db = firebase.firestore(); document.getElementById('local-banner').style.display = 'none'; }
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+    // Login invisible: solo habilita el acceso a Firestore, no identifica usuarios.
+    authReady = firebase.auth().signInAnonymously().catch(()=>{});
+    document.getElementById('local-banner').style.display = 'none';
+  }
   catch(e) { db = null; }
 } else {
   document.getElementById('local-banner').style.display = 'flex';
@@ -505,13 +513,13 @@ function loadLocal() {
 function saveFirestore() {
   if (!db) return;
   setSync('guardando');
-  db.collection('planificadores').doc(userId).set({ data:st.data, objectives:st.objectives, evaluations:st.evaluations })
+  authReady.then(() => db.collection('planificadores').doc(userId).set({ data:st.data, objectives:st.objectives, evaluations:st.evaluations }))
     .then(()=>setSync('sincronizado')).catch(()=>setSync('error'));
 }
 function loadFirestore(cb) {
   if (!db) { cb&&cb(); return; }
   setSync('guardando');
-  db.collection('planificadores').doc(userId).get()
+  authReady.then(() => db.collection('planificadores').doc(userId).get())
     .then(snap => {
       if (snap.exists) { const d=snap.data(); st.data=d.data||{}; st.objectives=d.objectives||{}; st.evaluations=d.evaluations||{}; saveLocal(); }
       setSync('sincronizado'); cb&&cb();
