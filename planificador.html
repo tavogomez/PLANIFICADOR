@@ -15,7 +15,7 @@
   --sb:env(safe-area-inset-bottom,0px);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--t1);min-height:100vh}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;overflow-x:hidden}
 
 /* HEADER */
 .header{background:#1c1c20;color:var(--t1);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 0 var(--bd);gap:10px}
@@ -493,7 +493,7 @@ const CATS = {
 //  ESTADO
 // ═══════════════════════════════════════════
 let st = {
-  view: 'month',
+  view: window.innerWidth < 640 ? 'day' : 'month',
   date: new Date(),
   data: {},
   objectives: {},
