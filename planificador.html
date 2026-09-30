@@ -50,9 +50,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 #main{padding-bottom:calc(56px + var(--sb) + 8px)}
 
 /* MONTH */
-.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;overflow:hidden}
 .dh{text-align:center;font-size:.65rem;font-weight:700;color:var(--t3);padding:6px 0 4px;text-transform:uppercase;letter-spacing:.5px}
-.dc{background:var(--s1);border-radius:10px;padding:7px;min-height:78px;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.dc{background:var(--s1);border-radius:10px;padding:7px;min-height:78px;cursor:pointer;border:2px solid transparent;transition:all .15s;min-width:0;overflow:hidden}
 .dc:hover{border-color:var(--ac)}
 .dc.m-today{background:var(--s2);border-color:var(--ac)}
 .dc.m-other{opacity:.25;pointer-events:none}
@@ -306,7 +306,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .stat-box.pending-box .stat-num{color:var(--t2)}
 
 /* ── MES: headers separados del grid ── */
-.month-days-row{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:3px}
+.month-days-row{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin-bottom:3px}
 
 /* ── MOBILE: celdas compactas (alto lo calcula JS) ── */
 @media (max-width:639px){
@@ -318,6 +318,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   .dc-num{font-size:.7rem;margin-bottom:1px}
   .dc-items{gap:1px}
   .dc-item{font-size:.5rem;padding:1px 2px}
+  .nav-title{min-width:0;font-size:.8rem}
+  .nav-bar{gap:4px;padding:8px 8px}
+  .nav-btn{padding:5px 10px}
+  .today-btn{padding:5px 8px;font-size:.7rem}
 }
 </style>
 </head>
