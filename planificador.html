@@ -305,13 +305,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .stat-box.pending-box{}
 .stat-box.pending-box .stat-num{color:var(--t2)}
 
-/* ── MOBILE MES (que entre todo en pantalla) ── */
+/* ── MES: headers separados del grid ── */
+.month-days-row{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:3px}
+
+/* ── MOBILE: layout flex que llena la pantalla exacto ── */
 @media (max-width:639px){
-  .container{padding:6px 6px 0}
-  .month-grid{
-    height:calc(100dvh - 44px - 48px - 22px - 64px);
-    grid-auto-rows:1fr;
+  html,body{height:100%}
+  body{overflow:hidden}
+  #app{display:flex;flex-direction:column;height:100%}
+  #main{flex:1;min-height:0;overflow-y:auto;overflow-x:clip;padding-bottom:0!important}
+  .bottom-nav{position:relative!important;flex-shrink:0}
+  .fab{bottom:calc(56px + 14px)!important}
+
+  /* Mes: llena el espacio disponible */
+  #main[data-view="month"]{overflow:hidden}
+  #main[data-view="month"] .container{
+    height:100%;padding:6px 6px 0;
+    display:flex;flex-direction:column
   }
+  #main[data-view="month"] .month-days-row{flex-shrink:0;gap:3px;margin-bottom:2px}
+  #main[data-view="month"] .month-grid{flex:1;min-height:0;gap:3px;grid-auto-rows:1fr}
+
+  /* Celdas compactas */
   .dh{font-size:.56rem;padding:3px 0 2px}
   .dc{min-height:0!important;padding:3px 3px 2px}
   .dc-num{font-size:.7rem;margin-bottom:1px}
@@ -775,7 +790,9 @@ function render() {
     html=renderEvaluation();
   }
   document.getElementById('nav-title').textContent=title;
-  document.getElementById('main').innerHTML=html;
+  const mainEl=document.getElementById('main');
+  mainEl.dataset.view=st.view;
+  mainEl.innerHTML=html;
 }
 
 // ═══════════════════════════════════════════
@@ -786,8 +803,8 @@ function renderMonth() {
   const first=new Date(year,month,1);
   const startOffset=(first.getDay()+6)%7;
   const cur=addDays(first,-startOffset);
-  let html='<div class="container"><div class="month-grid">';
-  DIA_CORTO.forEach(d=>{ html+=`<div class="dh">${d}</div>`; });
+  const dHead=DIA_CORTO.map(d=>`<div class="dh">${d}</div>`).join('');
+  let html=`<div class="container"><div class="month-days-row">${dHead}</div><div class="month-grid">`;
   for (let i=0;i<42;i++) {
     const key=dk(cur), aa=acts(cur);
     const other=cur.getMonth()!==month, tod=isToday(cur), sel=dk(cur)===dk(st.date);
@@ -801,7 +818,7 @@ function renderMonth() {
     html+=`<div class="${cls}" ${click}><div class="dc-num">${cur.getDate()}</div><div class="dc-items">${items}${more}</div></div>`;
     cur.setDate(cur.getDate()+1);
   }
-  return html+'</div></div>';
+  return html+'</div></div></div>';
 }
 
 // ═══════════════════════════════════════════
