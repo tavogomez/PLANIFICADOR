@@ -15,7 +15,7 @@
   --sb:env(safe-area-inset-bottom,0px);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;overflow-x:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;overflow-x:clip}
 
 /* HEADER */
 .header{background:#1c1c20;color:var(--t1);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 0 var(--bd);gap:10px}
@@ -304,6 +304,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .skip-cancel-btn{width:100%;margin-top:6px;padding:8px;border:none;border-radius:8px;cursor:pointer;font-size:.82rem;background:var(--s2);color:var(--t2)}
 .stat-box.pending-box{}
 .stat-box.pending-box .stat-num{color:var(--t2)}
+
+/* ── MOBILE MES (que entre todo en pantalla) ── */
+@media (max-width:639px){
+  .container{padding:6px 6px 0}
+  .month-grid{
+    height:calc(100dvh - 44px - 48px - 22px - 64px);
+    grid-auto-rows:1fr;
+  }
+  .dh{font-size:.56rem;padding:3px 0 2px}
+  .dc{min-height:0!important;padding:3px 3px 2px}
+  .dc-num{font-size:.7rem;margin-bottom:1px}
+  .dc-items{gap:1px}
+  .dc-item{font-size:.5rem;padding:1px 2px}
+}
 </style>
 </head>
 <body>
@@ -488,6 +502,33 @@ const CATS = {
   viaje:  { emoji: '🚗', label: 'Viaje'       },
   evento: { emoji: '🎉', label: 'Evento'      }
 };
+
+function actIcon(text) {
+  const t = (text||'').toLowerCase();
+  if (/facult|cursada|clase\b|tp\b|trabajo pr[aá]c/.test(t)) return '📚';
+  if (/f[uú]tbol|pelota|cancha|partido/.test(t)) return '⚽';
+  if (/gym|gimnasio|entrenamiento|entrenando/.test(t)) return '💪';
+  if (/trabajo\b|laburo|oficina/.test(t)) return '💼';
+  if (/trabajo en casa|home\s*office|teletr/.test(t)) return '🏠';
+  if (/cena\b|almuerz|comida|restaur|desayun|merienda/.test(t)) return '🍽️';
+  if (/lectura|leer\b|libro/.test(t)) return '📖';
+  if (/lavar ropa|lavand|planchar/.test(t)) return '👕';
+  if (/limpieza|limpiar|ordenar/.test(t)) return '🧹';
+  if (/maia/.test(t)) return '❤️';
+  if (/viaje|viajar|avi[oó]n/.test(t)) return '✈️';
+  if (/visita\b|visitando/.test(t)) return '🏘️';
+  if (/reuni[oó]n|meeting/.test(t)) return '🤝';
+  if (/coop\b|cooperat/.test(t)) return '🏢';
+  if (/compras|mercado|super\b/.test(t)) return '🛒';
+  if (/banco|pago\b|cobro|plata\b/.test(t)) return '💰';
+  if (/correr|running|trote|trotar/.test(t)) return '🏃';
+  if (/bici|ciclismo/.test(t)) return '🚴';
+  if (/yoga|pilates|stretching/.test(t)) return '🧘';
+  if (/m[uú]sica|guitarra|piano|ensayo/.test(t)) return '🎵';
+  if (/peluquer|corte de pelo/.test(t)) return '✂️';
+  if (/doctor|turno\b|cl[ií]nica/.test(t)) return '🏥';
+  return '';
+}
 
 // ═══════════════════════════════════════════
 //  ESTADO
@@ -752,7 +793,7 @@ function renderMonth() {
     const other=cur.getMonth()!==month, tod=isToday(cur), sel=dk(cur)===dk(st.date);
     let cls='dc'; if(other)cls+=' m-other'; if(tod)cls+=' m-today'; if(sel&&!other)cls+=' m-sel';
     const items=aa.slice(0,3).map(a=>{
-      const cat=a.category||'normal', emoji=CATS[cat]?.emoji||'';
+      const cat=a.category||'normal', emoji=CATS[cat]?.emoji||actIcon(a.text);
       return `<div class="dc-item cat-${cat}">${emoji?emoji+' ':''}${esc(a.text)}</div>`;
     }).join('');
     const more=aa.length>3?`<div class="dc-item dc-more">+${aa.length-3} más</div>`:'';
@@ -798,7 +839,7 @@ function renderWeek() {
   for (let i=0;i<7;i++) {
     const day=addDays(mon,i), key=dk(day), aa=sortedActs(day), tod=isToday(day);
     const actsHtml=aa.map(a=>{
-      const cat=a.category||'normal', emoji=CATS[cat]?.emoji||'';
+      const cat=a.category||'normal', emoji=CATS[cat]?.emoji||actIcon(a.text);
       const subs=(a.subacts||[]).length;
       const wkCls=a.done?'ai-done':a.skipped?'ai-skip':'';
       const wkCheck=a.skipped
@@ -871,7 +912,7 @@ function renderDay() {
     html+=`<div class="empty"><div class="empty-icon">&#128203;</div><div class="empty-text">No hay actividades — ¡agregá una!</div></div>`;
   } else {
     aa.forEach(a=>{
-      const cat=a.category||'normal', emoji=CATS[cat]?.emoji||'';
+      const cat=a.category||'normal', emoji=CATS[cat]?.emoji||actIcon(a.text);
       const subacts=a.subacts||[];
       const subHtml=subacts.length>0?`<div class="subacts">${subacts.map(s=>`
         <div class="subact-item">
